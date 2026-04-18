@@ -1,5 +1,5 @@
+import 'package:TR/features/home/ui/screen/home_screen.dart';
 import 'package:TR/firebase_options.dart';
-import 'package:TR/splash_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -16,13 +16,13 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ScreenUtilInit(
-      designSize: const Size(360, 813),
+      designSize:  const Size(360, 813),
       minTextAdapt: true,
       splitScreenMode: true,
       builder: (_, child) {
         return MaterialApp(
           debugShowCheckedModeBanner: false,
-          home: SplashScreen(),
+          home: HomeScreen(),
         );
       },
     );
