@@ -1,5 +1,5 @@
 class AppStrings {
-  static const String appName = 'TR Store';
+  static const String appName = 'TR';
   static const String homeTitle = 'Discover Products';
   static const String addToCart = 'Add to Cart';
   static const String checkout = 'Checkout';
