@@ -9,6 +9,7 @@ class ProductsCubit extends Cubit<ProductsState> {
 
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
+  /// Get All Products
   Future<void> getAllProducts() async {
     emit(ProductsLoading());
 
@@ -27,17 +28,42 @@ class ProductsCubit extends Cubit<ProductsState> {
       } else {
         emit(ProductsLoaded(products));
       }
-
     } on FirebaseException catch (e) {
       // هنا فصلنا FirebaseException لوحده تماماً
       final failure = FirebaseFailure.fromFirebaseException(e);
-      emit(ProductsError(failure.message)); 
-      
+      emit(ProductsError(failure.message));
+
       // في الـ Production بنبعت الـ code لـ Crashlytics هنا
       // FirebaseCrashlytics.instance.recordError(e, stack);
-      
     } catch (e) {
       // أي خطأ "بشري" أو Logic error تاني
+      emit(ProductsError("Unexpected error occurred."));
+    }
+  }
+
+  /// Products by Category
+  Future<void> getProductsByCategory(String categoryName) async {
+    emit(ProductsLoading());
+    try {
+      // All Products
+      if (categoryName == "All") {
+        return getAllProducts();
+      }
+
+      final querySnapshot = await _firestore
+          .collection('products')
+          .where('category', isEqualTo: categoryName)
+          .get();
+
+      final products = querySnapshot.docs.map((doc) {
+        return ProductModel.fromFirestore(doc.data(), doc.id);
+      }).toList();
+
+      emit(ProductsLoaded(products));
+    } on FirebaseException catch (e) {
+      final failure = FirebaseFailure.fromFirebaseException(e);
+      emit(ProductsError(failure.message));
+    } catch (e) {
       emit(ProductsError("Unexpected error occurred."));
     }
   }
