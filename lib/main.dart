@@ -22,6 +22,8 @@ void main() async {
   // 3. تهيئة Hive للتخزين المحلي (للسلة بدون Auth)
   await Hive.initFlutter();
   await Hive.openBox('cart_box');
+  await Hive.openBox('settings_box'); // ده اللي كان ناقص
+  await Hive.openBox('orders_box');
   runApp(const MyApp());
 }
 
