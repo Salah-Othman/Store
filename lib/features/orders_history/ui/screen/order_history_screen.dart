@@ -1,0 +1,108 @@
+import 'package:TR/core/theme/app_theme.dart';
+import 'package:TR/features/orders_history/logic/cubit/order_history_cubit.dart';
+import 'package:TR/features/orders_history/model/order_history_model.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/intl.dart';
+
+class OrderHistoryScreen extends StatelessWidget {
+  const OrderHistoryScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text("Order History")),
+      body: BlocBuilder<OrderHistoryCubit, OrderHistoryState>(
+        builder: (context, state) {
+          if (state is OrderHistoryLoading)
+            return Center(child: CircularProgressIndicator());
+          if (state is OrderHistoryEmpty)
+            return Center(child: Text("No orders found."));
+          if (state is OrderHistoryLoaded) {
+            return ListView.builder(
+              padding: EdgeInsets.all(16),
+              itemCount: state.orders.length,
+              itemBuilder: (context, index) =>
+                  _OrderCard(order: state.orders[index]),
+            );
+          }
+          return Center(child: Text("Something went wrong"));
+        },
+      ),
+    );
+  }
+
+  Widget _OrderCard({required OrderModel order}) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(15),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                "Order #${order.id.substring(0, 8)}",
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              _buildStatusBadge(order.status),
+            ],
+          ),
+          const Divider(height: 24),
+          Text(
+            "${order.items.length} Items",
+            style: const TextStyle(color: Colors.grey),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                DateFormat('dd MMM yyyy, hh:mm a').format(order.createdAt),
+                style: const TextStyle(fontSize: 12),
+              ),
+              Text(
+                "${order.totalPrice} EGP",
+                style: TextStyle(
+                  color: AppTheme.secondaryColor,
+                  fontWeight: FontWeight.w900,
+                  fontSize: 16,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatusBadge(String status) {
+    Color color = Colors.orange; // Pending
+    if (status == 'Delivered') color = Colors.green;
+    if (status == 'Shipped') color = Colors.blue;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Text(
+        status,
+        style: TextStyle(
+          color: color,
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    );
+  }
+}
