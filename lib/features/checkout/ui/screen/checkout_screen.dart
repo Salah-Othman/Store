@@ -1,9 +1,11 @@
 // presentation/views/checkout_screen.dart
 import 'package:TR/core/theme/app_theme.dart';
+import 'package:TR/features/address/model/address_model.dart';
 import 'package:TR/features/cart/logic/cubit/cart_cubit.dart';
 import 'package:TR/features/checkout/logic/cubit/cheackout_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:hive_flutter/adapters.dart';
 
 
 class CheckoutScreen extends StatefulWidget {
@@ -18,7 +20,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
   final _addressController = TextEditingController();
-
+@override
+void initState() {
+  super.initState();
+  _loadSavedAddress(); // استدعاء دالة التحميل التلقائي
+}
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -110,4 +116,23 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       ),
     );
   }
+
+void _loadSavedAddress() {
+  // 1. الوصول لصندوق الإعدادات المحفوظة
+  final addressBox = Hive.box('settings_box');
+  final savedData = addressBox.get('default_address');
+
+  if (savedData != null) {
+    // 2. تحويل البيانات من Map لموديل العنوان
+    final address = AddressModel.fromMap(Map<String, dynamic>.from(savedData));
+    
+    // 3. دمج بيانات العنوان في نص واحد وتعيينه لحقل العنوان
+    final fullAddress = "${address.building}, ${address.street}, ${address.area}, ${address.city}";
+    
+    // تأكد من تعيين القيمة للـ Controller
+    _addressController.text = fullAddress;
+    
+    // ملاحظة: يمكنك أيضاً حفظ الاسم ورقم الهاتف في Hive وملئهما بنفس الطريقة
+  }
+}
 }

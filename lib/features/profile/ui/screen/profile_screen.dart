@@ -1,5 +1,7 @@
 import 'package:TR/core/theme/app_theme.dart';
+import 'package:TR/features/address/ui/screen/adrress_screen.dart';
 import 'package:TR/features/orders_history/ui/screen/order_history_screen.dart';
+import 'package:TR/features/settings/ui/screen/setting_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/utils/app_sizes.dart';
@@ -12,7 +14,10 @@ class ProfileScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppTheme.neutralColor,
       appBar: AppBar(
-        title: Text("My Profile", style: GoogleFonts.notoSerif(fontWeight: FontWeight.bold)),
+        title: Text(
+          "My Profile",
+          style: GoogleFonts.notoSerif(fontWeight: FontWeight.bold),
+        ),
         centerTitle: true,
         backgroundColor: Colors.white,
         elevation: 0.5,
@@ -24,14 +29,14 @@ class ProfileScreen extends StatelessWidget {
             const SizedBox(height: 20),
             // 1. Header: صورة المستخدم والاسم
             _buildProfileHeader(),
-            
+
             const SizedBox(height: 30),
-            
+
             // 2. القائمة التفاعلية (Menu Options)
             _buildMenuSection(context),
-            
+
             const SizedBox(height: 20),
-            
+
             // 3. نسخة التطبيق أو زر تسجيل الخروج (مستقبلاً)
             Text(
               "Version 1.0.0",
@@ -65,7 +70,10 @@ class ProfileScreen extends StatelessWidget {
         const SizedBox(height: 16),
         Text(
           "Guest User", // يتغير عند إضافة الـ Auth
-          style: GoogleFonts.notoSerif(fontSize: 22, fontWeight: FontWeight.bold),
+          style: GoogleFonts.notoSerif(
+            fontSize: 22,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         Text(
           "Guest-Session-ID: #8821",
@@ -77,7 +85,7 @@ class ProfileScreen extends StatelessWidget {
 
   Widget _buildMenuSection(BuildContext context) {
     return Container(
-      margin:  EdgeInsets.symmetric(horizontal: AppSizes.p16),
+      margin: EdgeInsets.symmetric(horizontal: AppSizes.p16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
@@ -85,28 +93,49 @@ class ProfileScreen extends StatelessWidget {
       child: Column(
         children: [
           _profileTile(Icons.shopping_bag_outlined, "My Orders", () {
-            Navigator.push(context, MaterialPageRoute(builder: (context) => OrderHistoryScreen()));
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => OrderHistoryScreen()),
+            );
           }),
           _divider(),
-          _profileTile(Icons.location_on_outlined, "Shipping Addresses", () {}),
-          _divider(),
-          _profileTile(Icons.payment_outlined, "Payment Methods", () {
-            
+          _profileTile(Icons.location_on_outlined, "Shipping Addresses", () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => AddressScreen()),
+            );
           }),
           _divider(),
-          _profileTile(Icons.settings_outlined, "Settings", () {}),
+          _profileTile(Icons.settings_outlined, "Settings", () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => SettingsScreen()),
+            );
+          }),
           _divider(),
           _profileTile(Icons.help_outline, "Help Center", () {}),
           _divider(),
-          _profileTile(Icons.logout, "Login / Sign Up", () {
-            // هنا نوجه المستخدم لعمل Account
-          }, isLast: true, color: AppTheme.secondaryColor),
+          _profileTile(
+            Icons.logout,
+            "LogOut",
+            () {
+              // هنا نوجه المستخدم لعمل Account
+            },
+            isLast: true,
+            color: AppTheme.secondaryColor,
+          ),
         ],
       ),
     );
   }
 
-  Widget _profileTile(IconData icon, String title, VoidCallback onTap, {bool isLast = false, Color? color}) {
+  Widget _profileTile(
+    IconData icon,
+    String title,
+    VoidCallback onTap, {
+    bool isLast = false,
+    Color? color,
+  }) {
     return ListTile(
       leading: Icon(icon, color: color ?? AppTheme.primaryColor),
       title: Text(
