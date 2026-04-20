@@ -76,6 +76,15 @@ class CartCubit extends Cubit<CartState> {
     _updateAndSave(currentItems);
   }
 
+  Future<void> clearCart() async {
+      // 2. مسح البيانات من الـ Local Storage (Hive)
+      // نستخدم الـ Await لضمان إتمام المسح قبل القيام بأي عملية أخرى
+      var box = Hive.box(_cartBoxName);
+      if (box.isOpen) {
+        await box.clear(); 
+      }
+      _updateAndSave([]);
+    } 
+  }
 
 
-}
