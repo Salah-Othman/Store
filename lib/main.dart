@@ -1,8 +1,10 @@
 import 'package:TR/core/theme/app_theme.dart';
 import 'package:TR/features/cart/logic/cubit/cart_cubit.dart';
+import 'package:TR/features/checkout/logic/cubit/cheackout_cubit.dart';
 import 'package:TR/features/home/logic/category/category_cubit.dart';
 import 'package:TR/features/home/logic/products/products_cubit.dart';
 import 'package:TR/features/home/ui/screen/home_screen.dart';
+import 'package:TR/features/orders_history/logic/cubit/order_history_cubit.dart';
 import 'package:TR/firebase_options.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -38,6 +40,8 @@ class MyApp extends StatelessWidget {
             BlocProvider(create: (_) => CategoryCubit()),
             BlocProvider(create: (_) => ProductsCubit()),
             BlocProvider(create: (_) => CartCubit()),
+            BlocProvider(create: (_) => CheckoutCubit()),
+            BlocProvider(create: (_) => OrderHistoryCubit()),
           ],
           child: MaterialApp(
             theme: AppTheme.lightTheme,
