@@ -3,14 +3,52 @@ import 'package:TR/core/theme/app_theme.dart';
 import 'package:TR/features/home/model/category_model.dart';
 import 'package:TR/features/home/model/product_model.dart';
 import 'package:TR/features/orders_history/model/order_history_model.dart';
+import 'package:TR/core/notifications/local_notifications.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
-class AdminDashboardScreen extends StatelessWidget {
+class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
+
+  @override
+  State<AdminDashboardScreen> createState() => _AdminDashboardScreenState();
+}
+
+class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
+  final Set<String> _notifiedOrderIds = <String>{};
+  DateTime? _lastNotifiedCreatedAt;
+
+  void _maybeNotifyNewOrders(List<OrderModel> orders) {
+    // Only notify once per order id while this screen is alive.
+    final newestFirst = [...orders]..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+    for (final order in newestFirst) {
+      if (_notifiedOrderIds.contains(order.id)) continue;
+      if (_lastNotifiedCreatedAt != null &&
+          !order.createdAt.isAfter(_lastNotifiedCreatedAt!)) {
+        // Older/equal than last notified -> skip.
+        _notifiedOrderIds.add(order.id);
+        continue;
+      }
+
+      _notifiedOrderIds.add(order.id);
+      _lastNotifiedCreatedAt = order.createdAt;
+
+      // Use a stable-ish int id from the doc id hash.
+      final notificationId = order.id.hashCode & 0x7fffffff;
+      LocalNotifications.showNewOrder(
+        id: notificationId,
+        title: 'New Order',
+        body: '${order.customerName} • ${order.totalPrice.toStringAsFixed(2)} EGP',
+      );
+
+      // Only notify for the newest unseen order per rebuild.
+      break;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -26,22 +64,52 @@ class AdminDashboardScreen extends StatelessWidget {
         ),
         centerTitle: true,
       ),
-      body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-        stream: FirebaseFirestore.instance.collection('products').snapshots(),
-        builder: (context, productSnapshot) {
+      body: StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+        stream: currentUserId == null
+            ? const Stream.empty()
+            : FirebaseFirestore.instance
+                .collection('users')
+                .doc(currentUserId)
+                .snapshots(),
+        builder: (context, currentUserSnapshot) {
+          final currentUserData = currentUserSnapshot.data?.data();
+          final isAdmin =
+              currentUserData?['role'] == 'admin' ||
+              currentUserData?['isAdmin'] == true;
+
+          if (currentUserId == null) {
+            return Center(child: Text(l10n.adminOnly));
+          }
+
+          if (currentUserSnapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (!isAdmin) {
+            return Center(child: Text(l10n.adminOnly));
+          }
+
           return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-            stream: FirebaseFirestore.instance.collection('Orders').snapshots(),
-            builder: (context, orderSnapshot) {
+            stream: FirebaseFirestore.instance.collection('products').snapshots(),
+            builder: (context, productSnapshot) {
               return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-                stream: FirebaseFirestore.instance
-                    .collection('users')
-                    .snapshots(),
-                builder: (context, userSnapshot) {
+                stream: FirebaseFirestore.instance.collection('Orders').snapshots(),
+                builder: (context, orderSnapshot) {
                   return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
                     stream: FirebaseFirestore.instance
-                        .collection('category')
+                        .collection('users')
                         .snapshots(),
-                    builder: (context, categorySnapshot) {
+                    builder: (context, userSnapshot) {
+                      return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                        stream: FirebaseFirestore.instance
+                            .collection('category')
+                            .snapshots(),
+                        builder: (context, categorySnapshot) {
+                          return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                            stream: FirebaseFirestore.instance
+                                .collection('banners')
+                                .snapshots(),
+                            builder: (context, bannerSnapshot) {
                       if (productSnapshot.connectionState ==
                               ConnectionState.waiting ||
                           orderSnapshot.connectionState ==
@@ -49,6 +117,8 @@ class AdminDashboardScreen extends StatelessWidget {
                           userSnapshot.connectionState ==
                               ConnectionState.waiting ||
                           categorySnapshot.connectionState ==
+                              ConnectionState.waiting ||
+                          bannerSnapshot.connectionState ==
                               ConnectionState.waiting) {
                         return const Center(child: CircularProgressIndicator());
                       }
@@ -56,7 +126,8 @@ class AdminDashboardScreen extends StatelessWidget {
                       if (productSnapshot.hasError ||
                           orderSnapshot.hasError ||
                           userSnapshot.hasError ||
-                          categorySnapshot.hasError) {
+                          categorySnapshot.hasError ||
+                          bannerSnapshot.hasError) {
                         return Center(
                           child: Text(l10n.adminDashboardLoadError),
                         );
@@ -80,6 +151,12 @@ class AdminDashboardScreen extends StatelessWidget {
                             ..sort(
                               (a, b) => b.createdAt.compareTo(a.createdAt),
                             );
+
+                      // In-app admin notification for new orders.
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        if (!mounted) return;
+                        _maybeNotifyNewOrders(orders);
+                      });
                       final users = userSnapshot.data?.docs ?? [];
                       final categories = (categorySnapshot.data?.docs ?? [])
                           .map(
@@ -87,6 +164,7 @@ class AdminDashboardScreen extends StatelessWidget {
                                 CategoryModel.fromFirestore(doc.data(), doc.id),
                           )
                           .toList();
+                      final banners = bannerSnapshot.data?.docs ?? [];
 
                       final totalRevenue = orders.fold<double>(
                         0,
@@ -94,6 +172,9 @@ class AdminDashboardScreen extends StatelessWidget {
                       );
                       final pendingOrders = orders
                           .where((order) => order.status == 'Pending')
+                          .length;
+                      final successOrders = orders
+                          .where((order) => order.status == 'Success')
                           .length;
 
                       return ListView(
@@ -126,6 +207,11 @@ class AdminDashboardScreen extends StatelessWidget {
                                 value: pendingOrders.toString(),
                                 icon: Icons.schedule_outlined,
                               ),
+                              _MetricData(
+                                title: l10n.successOrdersLabel,
+                                value: successOrders.toString(),
+                                icon: Icons.check_circle_outline,
+                              ),
                             ],
                           ),
                           const SizedBox(height: 16),
@@ -138,17 +224,37 @@ class AdminDashboardScreen extends StatelessWidget {
                                   _showAddProductDialog(context, categories),
                               onAddCategory: () =>
                                   _showAddCategoryDialog(context),
+                              onAddBanner: () => _showAddBannerDialog(context),
                             ),
                           ),
                           const SizedBox(height: 24),
                           _SectionCard(
-                            title: l10n.recentOrders,
-                            child: orders.isEmpty
+                            title: l10n.pendingOrdersLabel,
+                            child: orders
+                                    .where((o) => o.status == 'Pending')
+                                    .isEmpty
                                 ? _EmptyState(message: l10n.noOrdersFound)
                                 : Column(
-                                    children: orders.take(5).map((order) {
-                                      return _OrderRow(order: order);
-                                    }).toList(),
+                                    children: orders
+                                        .where((o) => o.status == 'Pending')
+                                        .take(5)
+                                        .map((order) => _OrderRow(order: order))
+                                        .toList(),
+                                  ),
+                          ),
+                          const SizedBox(height: 16),
+                          _SectionCard(
+                            title: l10n.successOrdersLabel,
+                            child: orders
+                                    .where((o) => o.status == 'Success')
+                                    .isEmpty
+                                ? _EmptyState(message: l10n.noOrdersFound)
+                                : Column(
+                                    children: orders
+                                        .where((o) => o.status == 'Success')
+                                        .take(5)
+                                        .map((order) => _OrderRow(order: order))
+                                        .toList(),
                                   ),
                           ),
                           const SizedBox(height: 16),
@@ -158,7 +264,7 @@ class AdminDashboardScreen extends StatelessWidget {
                                 ? _EmptyState(message: l10n.adminNoProducts)
                                 : Column(
                                     children: products.take(6).map((product) {
-                                      return _ProductRow(product: product);
+                                      return _ProductRow(product: product, allowAdminActions: true);
                                     }).toList(),
                                   ),
                           ),
@@ -171,7 +277,21 @@ class AdminDashboardScreen extends StatelessWidget {
                                     children: categories.take(6).map((
                                       category,
                                     ) {
-                                      return _CategoryRow(category: category);
+                                      return _CategoryRow(category: category, allowAdminActions: true);
+                                    }).toList(),
+                                  ),
+                          ),
+                          const SizedBox(height: 16),
+                          _SectionCard(
+                            title: l10n.banners,
+                            child: banners.isEmpty
+                                ? _EmptyState(message: l10n.noOrdersFound)
+                                : Column(
+                                    children: banners.take(6).map((doc) {
+                                      return _BannerRow(
+                                        bannerId: doc.id,
+                                        data: doc.data(),
+                                      );
                                     }).toList(),
                                   ),
                           ),
@@ -191,6 +311,10 @@ class AdminDashboardScreen extends StatelessWidget {
                                   ),
                           ),
                         ],
+                      );
+                            },
+                          );
+                        },
                       );
                     },
                   );
@@ -421,6 +545,52 @@ class AdminDashboardScreen extends StatelessWidget {
       },
     );
   }
+
+  Future<void> _showAddBannerDialog(BuildContext context) async {
+    final l10n = AppLocalizations.of(context);
+    final formKey = GlobalKey<FormState>();
+    final imageController = TextEditingController();
+
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: Text(l10n.addBanner),
+          content: Form(
+            key: formKey,
+            child: TextFormField(
+              controller: imageController,
+              decoration: InputDecoration(labelText: l10n.imageUrl),
+              validator: (value) => value == null || value.trim().isEmpty
+                  ? l10n.requiredField
+                  : null,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: Text(l10n.cancel),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                if (!formKey.currentState!.validate()) return;
+                await FirebaseFirestore.instance.collection('banners').add({
+                  'imageUrl': imageController.text.trim(),
+                  'createdAt': FieldValue.serverTimestamp(),
+                });
+                if (!dialogContext.mounted) return;
+                Navigator.pop(dialogContext);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(l10n.bannerAdded)),
+                );
+              },
+              child: Text(l10n.save),
+            ),
+          ],
+        );
+      },
+    );
+  }
 }
 
 class _MetricsGrid extends StatelessWidget {
@@ -519,30 +689,45 @@ class _QuickActions extends StatelessWidget {
   const _QuickActions({
     required this.onAddProduct,
     required this.onAddCategory,
+    required this.onAddBanner,
   });
 
   final VoidCallback onAddProduct;
   final VoidCallback onAddCategory;
+  final VoidCallback onAddBanner;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
 
-    return Row(
+    return Column(
       children: [
-        Expanded(
-          child: ElevatedButton.icon(
-            onPressed: onAddProduct,
-            icon: const Icon(Icons.add_box_outlined),
-            label: Text(l10n.addProduct),
-          ),
+        Row(
+          children: [
+            Expanded(
+              child: ElevatedButton.icon(
+                onPressed: onAddProduct,
+                icon: const Icon(Icons.add_box_outlined),
+                label: Text(l10n.addProduct),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: onAddCategory,
+                icon: const Icon(Icons.add_circle_outline),
+                label: Text(l10n.addCategory),
+              ),
+            ),
+          ],
         ),
-        const SizedBox(width: 12),
-        Expanded(
+        const SizedBox(height: 12),
+        SizedBox(
+          width: double.infinity,
           child: OutlinedButton.icon(
-            onPressed: onAddCategory,
-            icon: const Icon(Icons.add_circle_outline),
-            label: Text(l10n.addCategory),
+            onPressed: onAddBanner,
+            icon: const Icon(Icons.image_outlined),
+            label: Text(l10n.addBanner),
           ),
         ),
       ],
@@ -829,9 +1014,140 @@ class _DetailRow extends StatelessWidget {
 }
 
 class _ProductRow extends StatelessWidget {
-  const _ProductRow({required this.product});
+  const _ProductRow({required this.product, this.allowAdminActions = false});
 
   final ProductModel product;
+  final bool allowAdminActions;
+
+  Future<void> _deleteProduct(BuildContext context) async {
+    final l10n = AppLocalizations.of(context);
+    await FirebaseFirestore.instance
+        .collection('products')
+        .doc(product.id)
+        .delete();
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(l10n.delete)),
+    );
+  }
+
+  Future<void> _editProduct(BuildContext context) async {
+    final l10n = AppLocalizations.of(context);
+    final formKey = GlobalKey<FormState>();
+    final nameController = TextEditingController(text: product.name);
+    final descriptionController = TextEditingController(text: product.description);
+    final priceController = TextEditingController(text: product.price.toString());
+    final imageController = TextEditingController(text: product.imageUrl);
+    var selectedCategory = product.category;
+    var isAvailable = product.isAvailable;
+
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: Text(l10n.edit),
+              content: Form(
+                key: formKey,
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      TextFormField(
+                        controller: nameController,
+                        decoration: InputDecoration(labelText: l10n.productName),
+                        validator: (value) => value == null || value.trim().isEmpty
+                            ? l10n.requiredField
+                            : null,
+                      ),
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        controller: descriptionController,
+                        maxLines: 3,
+                        decoration: InputDecoration(labelText: l10n.description),
+                        validator: (value) => value == null || value.trim().isEmpty
+                            ? l10n.requiredField
+                            : null,
+                      ),
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        controller: priceController,
+                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                        decoration: InputDecoration(labelText: l10n.price),
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return l10n.requiredField;
+                          }
+                          if (double.tryParse(value.trim()) == null) {
+                            return l10n.price;
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        controller: imageController,
+                        decoration: InputDecoration(labelText: l10n.imageUrl),
+                        validator: (value) => value == null || value.trim().isEmpty
+                            ? l10n.requiredField
+                            : null,
+                      ),
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        initialValue: selectedCategory,
+                        decoration: InputDecoration(labelText: l10n.categoryName),
+                        onChanged: (value) => selectedCategory = value.trim().isEmpty
+                            ? selectedCategory
+                            : value.trim(),
+                      ),
+                      const SizedBox(height: 12),
+                      SwitchListTile(
+                        contentPadding: EdgeInsets.zero,
+                        title: Text(l10n.availability),
+                        value: isAvailable,
+                        onChanged: (value) {
+                          setState(() => isAvailable = value);
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(dialogContext),
+                  child: Text(l10n.cancel),
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    if (!formKey.currentState!.validate()) return;
+                    await FirebaseFirestore.instance
+                        .collection('products')
+                        .doc(product.id)
+                        .update({
+                          'name': nameController.text.trim(),
+                          'description': descriptionController.text.trim(),
+                          'price': double.parse(priceController.text.trim()),
+                          'imageUrl': imageController.text.trim(),
+                          'category': selectedCategory,
+                          'isAvailable': isAvailable,
+                        });
+                    if (!dialogContext.mounted) return;
+                    Navigator.pop(dialogContext);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(l10n.save)),
+                    );
+                  },
+                  child: Text(l10n.save),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -848,31 +1164,138 @@ class _ProductRow extends StatelessWidget {
         style: GoogleFonts.manrope(fontWeight: FontWeight.w700),
       ),
       subtitle: Text(product.category),
-      trailing: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          Text(
-            "${product.price.toStringAsFixed(2)} EGP",
-            style: GoogleFonts.manrope(fontWeight: FontWeight.w800),
-          ),
-          Text(
-            product.isAvailable ? l10n.available : l10n.outOfStock,
-            style: GoogleFonts.manrope(
-              fontSize: 12,
-              color: product.isAvailable ? AppTheme.success : AppTheme.error,
+      trailing: allowAdminActions
+          ? PopupMenuButton<String>(
+              onSelected: (value) async {
+                if (value == 'edit') {
+                  await _editProduct(context);
+                } else if (value == 'delete') {
+                  await _deleteProduct(context);
+                }
+              },
+              itemBuilder: (context) => [
+                PopupMenuItem(value: 'edit', child: Text(l10n.edit)),
+                PopupMenuItem(value: 'delete', child: Text(l10n.delete)),
+              ],
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    "${product.price.toStringAsFixed(2)} EGP",
+                    style: GoogleFonts.manrope(fontWeight: FontWeight.w800),
+                  ),
+                  Text(
+                    product.isAvailable ? l10n.available : l10n.outOfStock,
+                    style: GoogleFonts.manrope(
+                      fontSize: 12,
+                      color: product.isAvailable ? AppTheme.success : AppTheme.error,
+                    ),
+                  ),
+                ],
+              ),
+            )
+          : Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  "${product.price.toStringAsFixed(2)} EGP",
+                  style: GoogleFonts.manrope(fontWeight: FontWeight.w800),
+                ),
+                Text(
+                  product.isAvailable ? l10n.available : l10n.outOfStock,
+                  style: GoogleFonts.manrope(
+                    fontSize: 12,
+                    color: product.isAvailable ? AppTheme.success : AppTheme.error,
+                  ),
+                ),
+              ],
             ),
-          ),
-        ],
-      ),
     );
   }
 }
 
 class _CategoryRow extends StatelessWidget {
-  const _CategoryRow({required this.category});
+  const _CategoryRow({required this.category, this.allowAdminActions = false});
 
   final CategoryModel category;
+  final bool allowAdminActions;
+
+  Future<void> _deleteCategory(BuildContext context) async {
+    final l10n = AppLocalizations.of(context);
+    await FirebaseFirestore.instance
+        .collection('category')
+        .doc(category.id)
+        .delete();
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(l10n.delete)),
+    );
+  }
+
+  Future<void> _editCategory(BuildContext context) async {
+    final l10n = AppLocalizations.of(context);
+    final formKey = GlobalKey<FormState>();
+    final nameController = TextEditingController(text: category.name);
+    final imageController = TextEditingController(text: category.imageUrl);
+
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: Text(l10n.edit),
+          content: Form(
+            key: formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFormField(
+                  controller: nameController,
+                  decoration: InputDecoration(labelText: l10n.categoryName),
+                  validator: (value) => value == null || value.trim().isEmpty
+                      ? l10n.requiredField
+                      : null,
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: imageController,
+                  decoration: InputDecoration(labelText: l10n.imageUrl),
+                  validator: (value) => value == null || value.trim().isEmpty
+                      ? l10n.requiredField
+                      : null,
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: Text(l10n.cancel),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                if (!formKey.currentState!.validate()) return;
+                await FirebaseFirestore.instance
+                    .collection('category')
+                    .doc(category.id)
+                    .update({
+                      'name': nameController.text.trim(),
+                      'imageUrl': imageController.text.trim(),
+                    });
+                if (!dialogContext.mounted) return;
+                Navigator.pop(dialogContext);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(l10n.save)),
+                );
+              },
+              child: Text(l10n.save),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -887,6 +1310,121 @@ class _CategoryRow extends StatelessWidget {
         style: GoogleFonts.manrope(fontWeight: FontWeight.w700),
       ),
       subtitle: Text(category.id),
+      trailing: allowAdminActions
+          ? PopupMenuButton<String>(
+              onSelected: (value) async {
+                if (value == 'edit') {
+                  await _editCategory(context);
+                } else if (value == 'delete') {
+                  await _deleteCategory(context);
+                }
+              },
+              itemBuilder: (context) => [
+                PopupMenuItem(value: 'edit', child: Text(AppLocalizations.of(context).edit)),
+                PopupMenuItem(value: 'delete', child: Text(AppLocalizations.of(context).delete)),
+              ],
+              child: const Icon(Icons.more_vert),
+            )
+          : null,
+    );
+  }
+}
+
+class _BannerRow extends StatelessWidget {
+  const _BannerRow({required this.bannerId, required this.data});
+
+  final String bannerId;
+  final Map<String, dynamic> data;
+
+  Future<void> _deleteBanner(BuildContext context) async {
+    final l10n = AppLocalizations.of(context);
+    await FirebaseFirestore.instance.collection('banners').doc(bannerId).delete();
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(l10n.bannerDeleted)),
+    );
+  }
+
+  Future<void> _editBanner(BuildContext context) async {
+    final l10n = AppLocalizations.of(context);
+    final formKey = GlobalKey<FormState>();
+    final imageController = TextEditingController(text: data['imageUrl']?.toString() ?? '');
+
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: Text(l10n.edit),
+          content: Form(
+            key: formKey,
+            child: TextFormField(
+              controller: imageController,
+              decoration: InputDecoration(labelText: l10n.imageUrl),
+              validator: (value) => value == null || value.trim().isEmpty
+                  ? l10n.requiredField
+                  : null,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: Text(l10n.cancel),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                if (!formKey.currentState!.validate()) return;
+                await FirebaseFirestore.instance
+                    .collection('banners')
+                    .doc(bannerId)
+                    .update({'imageUrl': imageController.text.trim()});
+                if (!dialogContext.mounted) return;
+                Navigator.pop(dialogContext);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(l10n.bannerUpdated)),
+                );
+              },
+              child: Text(l10n.save),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final imageUrl = data['imageUrl']?.toString() ?? '';
+
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      leading: CircleAvatar(
+        backgroundColor: AppTheme.neutralColor,
+        backgroundImage: imageUrl.isNotEmpty ? NetworkImage(imageUrl) : null,
+        child: imageUrl.isEmpty
+            ? const Icon(Icons.image_outlined, color: AppTheme.primaryColor)
+            : null,
+      ),
+      title: Text(
+        imageUrl.isEmpty ? '-' : imageUrl,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: GoogleFonts.manrope(fontWeight: FontWeight.w700),
+      ),
+      trailing: PopupMenuButton<String>(
+        onSelected: (value) async {
+          if (value == 'edit') {
+            await _editBanner(context);
+          } else if (value == 'delete') {
+            await _deleteBanner(context);
+          }
+        },
+        itemBuilder: (context) => [
+          PopupMenuItem(value: 'edit', child: Text(l10n.edit)),
+          PopupMenuItem(value: 'delete', child: Text(l10n.delete)),
+        ],
+        child: const Icon(Icons.more_vert),
+      ),
     );
   }
 }
