@@ -597,95 +597,156 @@ class _OrderRow extends StatelessWidget {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (sheetContext) {
-        return Container(
-          padding: const EdgeInsets.all(20),
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-          ),
-          child: SafeArea(
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    l10n.orderDetails,
-                    style: GoogleFonts.notoSerif(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: AppTheme.primaryColor,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  _DetailRow(
-                    label: l10n.createdAtLabel,
-                    value: DateFormat(
-                      'dd MMM yyyy, hh:mm a',
-                      localeName,
-                    ).format(order.createdAt),
-                  ),
-                  _DetailRow(
-                    label: l10n.customerName,
-                    value: order.customerName,
-                  ),
-                  _DetailRow(
-                    label: l10n.customerPhone,
-                    value: order.customerPhone,
-                  ),
-                  _DetailRow(
-                    label: l10n.customerAddress,
-                    value: order.customerAddress,
-                  ),
-                  _DetailRow(
-                    label: l10n.statusLabel,
-                    value: l10n.localizedOrderStatus(order.status),
-                  ),
-                  _DetailRow(
-                    label: l10n.totalPriceLabel,
-                    value: "${order.totalPrice.toStringAsFixed(2)} EGP",
-                  ),
-                  const SizedBox(height: 18),
-                  Text(
-                    l10n.orderItems,
-                    style: GoogleFonts.manrope(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w800,
-                      color: AppTheme.primaryColor,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  ...order.items.map((item) {
-                    final itemMap = Map<String, dynamic>.from(item as Map);
-                    return Container(
-                      margin: const EdgeInsets.only(bottom: 10),
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: AppTheme.neutralColor,
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _DetailRow(
-                            label: l10n.itemName,
-                            value: itemMap['name']?.toString() ?? '-',
-                          ),
-                          _DetailRow(
-                            label: l10n.itemPrice,
-                            value: "${itemMap['price'] ?? 0} EGP",
-                          ),
-                          _DetailRow(
-                            label: l10n.quantity,
-                            value: "${itemMap['quantity'] ?? 0}",
-                          ),
-                        ],
-                      ),
-                    );
-                  }),
-                ],
+        var currentStatus = order.status;
+        var isUpdating = false;
+
+        return StatefulBuilder(
+          builder: (context, setState) {
+            Future<void> markAsSuccess() async {
+              if (isUpdating) return;
+              setState(() => isUpdating = true);
+              try {
+                await FirebaseFirestore.instance
+                    .collection('Orders')
+                    .doc(order.id)
+                    .update({'status': 'Success'});
+
+                setState(() => currentStatus = 'Success');
+                if (!context.mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(l10n.orderMarkedSuccess)),
+                );
+              } catch (_) {
+                if (!context.mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(l10n.somethingWentWrong)),
+                );
+              } finally {
+                if (context.mounted) {
+                  setState(() => isUpdating = false);
+                }
+              }
+            }
+
+            return Container(
+              padding: const EdgeInsets.all(20),
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
               ),
-            ),
-          ),
+              child: SafeArea(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Flexible(
+                      fit: FlexFit.loose,
+                      child: SingleChildScrollView(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              l10n.orderDetails,
+                              style: GoogleFonts.notoSerif(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                color: AppTheme.primaryColor,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            _DetailRow(
+                              label: l10n.createdAtLabel,
+                              value: DateFormat(
+                                'dd MMM yyyy, hh:mm a',
+                                localeName,
+                              ).format(order.createdAt),
+                            ),
+                            _DetailRow(
+                              label: l10n.customerName,
+                              value: order.customerName,
+                            ),
+                            _DetailRow(
+                              label: l10n.customerPhone,
+                              value: order.customerPhone,
+                            ),
+                            _DetailRow(
+                              label: l10n.customerAddress,
+                              value: order.customerAddress,
+                            ),
+                            _DetailRow(
+                              label: l10n.statusLabel,
+                              value: l10n.localizedOrderStatus(currentStatus),
+                            ),
+                            _DetailRow(
+                              label: l10n.totalPriceLabel,
+                              value: "${order.totalPrice.toStringAsFixed(2)} EGP",
+                            ),
+                            const SizedBox(height: 18),
+                            Text(
+                              l10n.orderItems,
+                              style: GoogleFonts.manrope(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w800,
+                                color: AppTheme.primaryColor,
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            ...order.items.map((item) {
+                              final itemMap =
+                                  Map<String, dynamic>.from(item as Map);
+                              return Container(
+                                margin: const EdgeInsets.only(bottom: 10),
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: AppTheme.neutralColor,
+                                  borderRadius: BorderRadius.circular(14),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    _DetailRow(
+                                      label: l10n.itemName,
+                                      value: itemMap['name']?.toString() ?? '-',
+                                    ),
+                                    _DetailRow(
+                                      label: l10n.itemPrice,
+                                      value: "${itemMap['price'] ?? 0} EGP",
+                                    ),
+                                    _DetailRow(
+                                      label: l10n.quantity,
+                                      value: "${itemMap['quantity'] ?? 0}",
+                                    ),
+                                  ],
+                                ),
+                              );
+                            }),
+                          ],
+                        ),
+                      ),
+                    ),
+                    if (currentStatus == 'Pending') ...[
+                      const SizedBox(height: 12),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: isUpdating ? null : markAsSuccess,
+                          child: isUpdating
+                              ? const SizedBox(
+                                  height: 18,
+                                  width: 18,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : Text(l10n.markAsSuccess),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            );
+          },
         );
       },
     );
