@@ -1,4 +1,4 @@
-// presentation/views/checkout_screen.dart
+import 'package:TR/core/localization/app_localizations.dart';
 import 'package:TR/core/theme/app_theme.dart';
 import 'package:TR/features/address/model/address_model.dart';
 import 'package:TR/features/cart/logic/cubit/cart_cubit.dart';
@@ -6,7 +6,6 @@ import 'package:TR/features/checkout/logic/cubit/cheackout_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive_flutter/adapters.dart';
-
 
 class CheckoutScreen extends StatefulWidget {
   const CheckoutScreen({super.key});
@@ -20,24 +19,37 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
   final _addressController = TextEditingController();
-@override
-void initState() {
-  super.initState();
-  _loadSavedAddress(); // استدعاء دالة التحميل التلقائي
-}
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSavedAddress();
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _phoneController.dispose();
+    _addressController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return Scaffold(
-      appBar: AppBar(title: const Text("Checkout")),
+      appBar: AppBar(title: Text(l10n.checkout)),
       body: BlocConsumer<CheckoutCubit, CheckoutState>(
         listener: (context, state) {
           if (state is CheckoutSuccess) {
-            // مسح السلة بعد نجاح الأوردر
             context.read<CartCubit>().clearCart();
             _showSuccessDialog(state.orderId);
           }
           if (state is CheckoutError) {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(state.message)));
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text(state.message)));
           }
         },
         builder: (context, state) {
@@ -46,13 +58,22 @@ void initState() {
             child: ListView(
               padding: const EdgeInsets.all(20),
               children: [
-                _buildField(_nameController, "Full Name", Icons.person),
+                _buildField(_nameController, l10n.fullName, Icons.person),
                 const SizedBox(height: 15),
-                _buildField(_phoneController, "Phone Number", Icons.phone, isPhone: true),
+                _buildField(
+                  _phoneController,
+                  l10n.phoneNumber,
+                  Icons.phone,
+                  isPhone: true,
+                ),
                 const SizedBox(height: 15),
-                _buildField(_addressController, "Detailed Address", Icons.location_on, maxLines: 3),
+                _buildField(
+                  _addressController,
+                  l10n.detailedAddress,
+                  Icons.location_on,
+                  maxLines: 3,
+                ),
                 const SizedBox(height: 40),
-                
                 state is CheckoutLoading
                     ? const Center(child: CircularProgressIndicator())
                     : ElevatedButton(
@@ -61,7 +82,13 @@ void initState() {
                           minimumSize: const Size(double.infinity, 55),
                         ),
                         onPressed: () => _submitOrder(context),
-                        child: const Text("Confirm Order", style: TextStyle(color: Colors.white, fontSize: 18)),
+                        child: Text(
+                          l10n.confirmOrder,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                          ),
+                        ),
                       ),
               ],
             ),
@@ -71,7 +98,15 @@ void initState() {
     );
   }
 
-  Widget _buildField(TextEditingController controller, String hint, IconData icon, {bool isPhone = false, int maxLines = 1}) {
+  Widget _buildField(
+    TextEditingController controller,
+    String hint,
+    IconData icon, {
+    bool isPhone = false,
+    int maxLines = 1,
+  }) {
+    final l10n = AppLocalizations.of(context);
+
     return TextFormField(
       controller: controller,
       maxLines: maxLines,
@@ -81,7 +116,7 @@ void initState() {
         prefixIcon: Icon(icon),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
       ),
-      validator: (val) => val!.isEmpty ? "Required field" : null,
+      validator: (val) => val!.isEmpty ? l10n.requiredField : null,
     );
   }
 
@@ -89,50 +124,55 @@ void initState() {
     if (_formKey.currentState!.validate()) {
       final cartState = context.read<CartCubit>().state;
       context.read<CheckoutCubit>().placeOrder(
-            name: _nameController.text,
-            phone: _phoneController.text,
-            address: _addressController.text,
-            cartItems: cartState.items.map((i) => {
-              'id': i.product.id,
-              'name': i.product.name,
-              'price': i.product.price,
-              'quantity': i.quantity
-            }).toList(),
-            total: cartState.totalPrice + 50, // السعر + الشحن
-          );
+        name: _nameController.text,
+        phone: _phoneController.text,
+        address: _addressController.text,
+        cartItems: cartState.items
+            .map(
+              (i) => {
+                'id': i.product.id,
+                'name': i.product.name,
+                'price': i.product.price,
+                'quantity': i.quantity,
+              },
+            )
+            .toList(),
+        total: cartState.totalPrice + 50,
+      );
     }
   }
 
   void _showSuccessDialog(String id) {
-    showDialog(
+    final l10n = AppLocalizations.of(context);
+
+    showDialog<void>(
       context: context,
       barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        title: const Text("Order Placed!"),
-        content: Text("Your order ID is: $id\nWe will contact you soon."),
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.orderPlaced),
+        content: Text(l10n.orderPlacedMessage(id)),
         actions: [
-          TextButton(onPressed: () => Navigator.of(context).popUntil((route) => route.isFirst), child: const Text("Back to Home"))
+          TextButton(
+            onPressed: () =>
+                Navigator.of(dialogContext).popUntil((route) => route.isFirst),
+            child: Text(l10n.backToHome),
+          ),
         ],
       ),
     );
   }
 
-void _loadSavedAddress() {
-  // 1. الوصول لصندوق الإعدادات المحفوظة
-  final addressBox = Hive.box('settings_box');
-  final savedData = addressBox.get('default_address');
+  void _loadSavedAddress() {
+    final addressBox = Hive.box('settings_box');
+    final savedData = addressBox.get('default_address');
 
-  if (savedData != null) {
-    // 2. تحويل البيانات من Map لموديل العنوان
-    final address = AddressModel.fromMap(Map<String, dynamic>.from(savedData));
-    
-    // 3. دمج بيانات العنوان في نص واحد وتعيينه لحقل العنوان
-    final fullAddress = "${address.building}, ${address.street}, ${address.area}, ${address.city}";
-    
-    // تأكد من تعيين القيمة للـ Controller
-    _addressController.text = fullAddress;
-    
-    // ملاحظة: يمكنك أيضاً حفظ الاسم ورقم الهاتف في Hive وملئهما بنفس الطريقة
+    if (savedData != null) {
+      final address = AddressModel.fromMap(
+        Map<String, dynamic>.from(savedData),
+      );
+      final fullAddress =
+          "${address.building}, ${address.street}, ${address.area}, ${address.city}";
+      _addressController.text = fullAddress;
+    }
   }
-}
 }
