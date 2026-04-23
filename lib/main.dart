@@ -8,6 +8,8 @@ import 'package:TR/features/home/logic/category/category_cubit.dart';
 import 'package:TR/features/home/logic/products/products_cubit.dart';
 import 'package:TR/features/orders_history/logic/cubit/order_history_cubit.dart';
 import 'package:TR/firebase_options.dart';
+import 'package:TR/core/notifications/local_notifications.dart';
+import 'package:TR/core/notifications/firebase_notifications.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -18,6 +20,9 @@ import 'package:hive_flutter/adapters.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  await LocalNotifications.init();
+  await FirebaseNotifications.init();
 
   await Hive.initFlutter();
   await Hive.openBox('cart_box');

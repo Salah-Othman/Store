@@ -3,6 +3,8 @@ import 'package:TR/core/theme/app_theme.dart';
 import 'package:TR/features/address/model/address_model.dart';
 import 'package:TR/features/cart/logic/cubit/cart_cubit.dart';
 import 'package:TR/features/checkout/logic/cubit/cheackout_cubit.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive_flutter/adapters.dart';
@@ -19,11 +21,13 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
   final _addressController = TextEditingController();
+  bool _didPrefillUserData = false;
 
   @override
   void initState() {
     super.initState();
     _loadSavedAddress();
+    _prefillUserData();
   }
 
   @override
@@ -137,7 +141,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               },
             )
             .toList(),
-        total: cartState.totalPrice + 50,
+        total: cartState.totalPrice + 25,
       );
     }
   }
@@ -173,6 +177,40 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       final fullAddress =
           "${address.building}, ${address.street}, ${address.area}, ${address.city}";
       _addressController.text = fullAddress;
+    }
+  }
+
+  Future<void> _prefillUserData() async {
+    if (_didPrefillUserData) return;
+    _didPrefillUserData = true;
+
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
+
+    try {
+      final doc =
+          await FirebaseFirestore.instance.collection('users').doc(uid).get();
+      final data = doc.data();
+      if (data == null) return;
+
+      final name = data['name']?.toString().trim();
+      final phone = data['phoneNumber']?.toString().trim();
+
+      if (!mounted) return;
+
+      // Only prefill if user hasn't typed yet.
+      if ((_nameController.text).trim().isEmpty &&
+          name != null &&
+          name.isNotEmpty) {
+        _nameController.text = name;
+      }
+      if ((_phoneController.text).trim().isEmpty &&
+          phone != null &&
+          phone.isNotEmpty) {
+        _phoneController.text = phone;
+      }
+    } catch (_) {
+      // If Firestore fails, just keep fields empty for manual entry.
     }
   }
 }

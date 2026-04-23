@@ -35,6 +35,8 @@ class AppLocalizations {
   String get totalOrders => isArabic ? 'إجمالي الطلبات' : 'Total Orders';
   String get totalUsers => isArabic ? 'إجمالي المستخدمين' : 'Total Users';
   String get pendingOrdersLabel => isArabic ? 'طلبات معلقة' : 'Pending Orders';
+  String get successOrdersLabel =>
+      isArabic ? 'طلبات ناجحة' : 'Success Orders';
   String get totalRevenue => isArabic ? 'إجمالي الإيرادات' : 'Total Revenue';
   String get recentOrders => isArabic ? 'أحدث الطلبات' : 'Recent Orders';
   String get productCatalog => isArabic ? 'المنتجات' : 'Product Catalog';
@@ -257,6 +259,18 @@ class AppLocalizations {
   String get markAsSuccess => isArabic ? 'تحويل إلى ناجح' : 'Mark as Success';
   String get orderMarkedSuccess =>
       isArabic ? 'تم تحديث الطلب إلى ناجح' : 'Order marked as success';
+  String get adminOnly =>
+      isArabic ? 'هذه الصفحة للمسؤول فقط' : 'This page is for admins only';
+  String get banners => isArabic ? 'البنرات' : 'Banners';
+  String get addBanner => isArabic ? 'إضافة بنر' : 'Add Banner';
+  String get bannerAdded =>
+      isArabic ? 'تمت إضافة البنر بنجاح' : 'Banner added successfully';
+  String get bannerUpdated =>
+      isArabic ? 'تم تحديث البنر بنجاح' : 'Banner updated successfully';
+  String get bannerDeleted =>
+      isArabic ? 'تم حذف البنر بنجاح' : 'Banner deleted successfully';
+  String get edit => isArabic ? 'تعديل' : 'Edit';
+  String get delete => isArabic ? 'حذف' : 'Delete';
 
   String languageName(String code) {
     switch (code) {
