@@ -11,36 +11,41 @@ class SavedAddress extends StatefulWidget {
 }
 
 class _SavedAddressState extends State<SavedAddress> {
+  String? _fullAddress;
+
   @override
-void initState() {
-  super.initState();
-  _loadSavedAddress(); // استدعاء دالة التحميل التلقائي
-}
+  void initState() {
+    super.initState();
+    _loadSavedAddress();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: SizedBox(
         height: 400.h,
-        child: 
-        ListView(
+        child: ListView(
           children: [
-            Text("Saved Address"),
+            const Text("Saved Address"),
+            const SizedBox(height: 12),
+            Text(_fullAddress ?? '-'),
           ],
         ),
       ),
     );
   }
-  void _loadSavedAddress() {
-  // 1. الوصول لصندوق الإعدادات المحفوظة
-  final addressBox = Hive.box('settings_box');
-  final savedData = addressBox.get('default_address');
 
-  if (savedData != null) {
-    // 2. تحويل البيانات من Map لموديل العنوان
+  void _loadSavedAddress() {
+    final addressBox = Hive.box('settings_box');
+    final savedData = addressBox.get('default_address');
+
+    if (savedData == null) return;
+
     final address = AddressModel.fromMap(Map<String, dynamic>.from(savedData));
-    
-    // 3. دمج بيانات العنوان في نص واحد وتعيينه لحقل العنوان
-    final fullAddress = "${address.building}, ${address.street}, ${address.area}, ${address.city}";
+    final fullAddress =
+        "${address.building}, ${address.street}, ${address.area}, ${address.city}";
+
+    if (!mounted) return;
+    setState(() => _fullAddress = fullAddress);
   }
-}
 }
