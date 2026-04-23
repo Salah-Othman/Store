@@ -1,3 +1,4 @@
+import 'package:TR/core/localization/app_localizations.dart';
 import 'package:TR/core/theme/app_theme.dart';
 import 'package:TR/features/address/model/address_model.dart';
 import 'package:flutter/material.dart';
@@ -17,13 +18,22 @@ class _AddressScreenState extends State<AddressScreen> {
   final _areaController = TextEditingController();
   final _streetController = TextEditingController();
   final _buildingController = TextEditingController();
-  
-  final _addressBox = Hive.box('settings_box'); // صندوق الإعدادات العامة
+
+  final _addressBox = Hive.box('settings_box');
 
   @override
   void initState() {
     super.initState();
     _loadSavedAddress();
+  }
+
+  @override
+  void dispose() {
+    _cityController.dispose();
+    _areaController.dispose();
+    _streetController.dispose();
+    _buildingController.dispose();
+    super.dispose();
   }
 
   void _loadSavedAddress() {
@@ -39,9 +49,14 @@ class _AddressScreenState extends State<AddressScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return Scaffold(
       appBar: AppBar(
-        title: Text("Shipping Address", style: GoogleFonts.notoSerif(fontWeight: FontWeight.bold)),
+        title: Text(
+          l10n.shippingAddress,
+          style: GoogleFonts.notoSerif(fontWeight: FontWeight.bold),
+        ),
         centerTitle: true,
       ),
       body: Form(
@@ -49,33 +64,38 @@ class _AddressScreenState extends State<AddressScreen> {
         child: ListView(
           padding: const EdgeInsets.all(24),
           children: [
-            _buildInputLabel("City"),
-            _addressField(_cityController, "e.g. Cairo", Icons.location_city),
+            _buildInputLabel(l10n.city),
+            _addressField(_cityController, l10n.cityHint, Icons.location_city),
             const SizedBox(height: 20),
-            
-            _buildInputLabel("Area / District"),
-            _addressField(_areaController, "e.g. New Cairo", Icons.map_outlined),
+            _buildInputLabel(l10n.areaDistrict),
+            _addressField(_areaController, l10n.areaHint, Icons.map_outlined),
             const SizedBox(height: 20),
-            
-            _buildInputLabel("Street Name"),
-            _addressField(_streetController, "e.g. 90th Street", Icons.streetview),
+            _buildInputLabel(l10n.streetName),
+            _addressField(_streetController, l10n.streetHint, Icons.streetview),
             const SizedBox(height: 20),
-            
-            _buildInputLabel("Building / Villa No."),
-            _addressField(_buildingController, "e.g. Building 12, Floor 3", Icons.home_work_outlined),
-            
+            _buildInputLabel(l10n.buildingVilla),
+            _addressField(
+              _buildingController,
+              l10n.buildingHint,
+              Icons.home_work_outlined,
+            ),
             const SizedBox(height: 50),
-            
             ElevatedButton(
               onPressed: _saveAddress,
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppTheme.primaryColor,
                 minimumSize: const Size(double.infinity, 55),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15),
+                ),
               ),
               child: Text(
-                "Save Address",
-                style: GoogleFonts.manrope(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                l10n.saveAddress,
+                style: GoogleFonts.manrope(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
               ),
             ),
           ],
@@ -87,11 +107,23 @@ class _AddressScreenState extends State<AddressScreen> {
   Widget _buildInputLabel(String label) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8, left: 4),
-      child: Text(label, style: GoogleFonts.manrope(fontWeight: FontWeight.bold, color: AppTheme.primaryColor)),
+      child: Text(
+        label,
+        style: GoogleFonts.manrope(
+          fontWeight: FontWeight.bold,
+          color: AppTheme.primaryColor,
+        ),
+      ),
     );
   }
 
-  Widget _addressField(TextEditingController controller, String hint, IconData icon) {
+  Widget _addressField(
+    TextEditingController controller,
+    String hint,
+    IconData icon,
+  ) {
+    final l10n = AppLocalizations.of(context);
+
     return TextFormField(
       controller: controller,
       decoration: InputDecoration(
@@ -99,13 +131,18 @@ class _AddressScreenState extends State<AddressScreen> {
         prefixIcon: Icon(icon, color: AppTheme.secondaryColor),
         filled: true,
         fillColor: Colors.white,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
       ),
-      validator: (val) => val!.isEmpty ? "Required" : null,
+      validator: (val) => val!.isEmpty ? l10n.requiredField : null,
     );
   }
 
   void _saveAddress() async {
+    final l10n = AppLocalizations.of(context);
+
     if (_formKey.currentState!.validate()) {
       final address = AddressModel(
         city: _cityController.text,
@@ -115,9 +152,14 @@ class _AddressScreenState extends State<AddressScreen> {
       );
 
       await _addressBox.put('default_address', address.toMap());
-      
+
+      if (!mounted) return;
+
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Address saved successfully"), backgroundColor: Colors.green),
+        SnackBar(
+          content: Text(l10n.addressSaved),
+          backgroundColor: Colors.green,
+        ),
       );
       Navigator.pop(context);
     }

@@ -1,8 +1,14 @@
+import 'package:TR/core/localization/app_localizations.dart';
 import 'package:TR/core/theme/app_theme.dart';
 import 'package:TR/features/address/ui/screen/adrress_screen.dart';
+import 'package:TR/features/admin/ui/screen/admin_dashboard_screen.dart';
+import 'package:TR/features/auth/logic/cubit/auth_cubit.dart';
 import 'package:TR/features/orders_history/ui/screen/order_history_screen.dart';
 import 'package:TR/features/settings/ui/screen/setting_screen.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/utils/app_sizes.dart';
 
@@ -11,11 +17,13 @@ class ProfileScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return Scaffold(
       backgroundColor: AppTheme.neutralColor,
       appBar: AppBar(
         title: Text(
-          "My Profile",
+          l10n.myProfile,
           style: GoogleFonts.notoSerif(fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
@@ -27,19 +35,12 @@ class ProfileScreen extends StatelessWidget {
         child: Column(
           children: [
             const SizedBox(height: 20),
-            // 1. Header: صورة المستخدم والاسم
-            _buildProfileHeader(),
-
+            _buildProfileHeader(context),
             const SizedBox(height: 30),
-
-            // 2. القائمة التفاعلية (Menu Options)
             _buildMenuSection(context),
-
             const SizedBox(height: 20),
-
-            // 3. نسخة التطبيق أو زر تسجيل الخروج (مستقبلاً)
             Text(
-              "Version 1.0.0",
+              l10n.version,
               style: TextStyle(color: Colors.grey[500], fontSize: 12),
             ),
             const SizedBox(height: 20),
@@ -49,7 +50,12 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildProfileHeader() {
+  Widget _buildProfileHeader(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final user = FirebaseAuth.instance.currentUser;
+    final displayName = user?.displayName;
+    final email = user?.email;
+
     return Column(
       children: [
         Stack(
@@ -63,20 +69,24 @@ class ProfileScreen extends StatelessWidget {
             CircleAvatar(
               radius: 18,
               backgroundColor: AppTheme.secondaryColor,
-              child: const Icon(Icons.edit, size: 18, color: Colors.white),
+              child: const Icon(
+                Icons.verified_user,
+                size: 18,
+                color: Colors.white,
+              ),
             ),
           ],
         ),
         const SizedBox(height: 16),
         Text(
-          "Guest User", // يتغير عند إضافة الـ Auth
+          displayName?.isNotEmpty == true ? displayName! : l10n.signedInUser,
           style: GoogleFonts.notoSerif(
             fontSize: 22,
             fontWeight: FontWeight.bold,
           ),
         ),
         Text(
-          "Guest-Session-ID: #8821",
+          email ?? l10n.guestSessionId('8821'),
           style: GoogleFonts.manrope(color: Colors.grey),
         ),
       ],
@@ -84,47 +94,81 @@ class ProfileScreen extends StatelessWidget {
   }
 
   Widget _buildMenuSection(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final currentUser = FirebaseAuth.instance.currentUser;
+
     return Container(
       margin: EdgeInsets.symmetric(horizontal: AppSizes.p16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
       ),
-      child: Column(
-        children: [
-          _profileTile(Icons.shopping_bag_outlined, "My Orders", () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => OrderHistoryScreen()),
-            );
-          }),
-          _divider(),
-          _profileTile(Icons.location_on_outlined, "Shipping Addresses", () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => AddressScreen()),
-            );
-          }),
-          _divider(),
-          _profileTile(Icons.settings_outlined, "Settings", () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => SettingsScreen()),
-            );
-          }),
-          _divider(),
-          _profileTile(Icons.help_outline, "Help Center", () {}),
-          _divider(),
-          _profileTile(
-            Icons.logout,
-            "LogOut",
-            () {
-              // هنا نوجه المستخدم لعمل Account
-            },
-            isLast: true,
-            color: AppTheme.secondaryColor,
-          ),
-        ],
+      child: StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+        stream: FirebaseFirestore.instance
+            .collection('users')
+            .doc(currentUser?.uid)
+            .snapshots(),
+        builder: (context, snapshot) {
+          final userData = snapshot.data?.data();
+          final isAdmin =
+              userData?['role'] == 'admin' || userData?['isAdmin'] == true;
+
+          return Column(
+            children: [
+              _profileTile(Icons.shopping_bag_outlined, l10n.myOrders, () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const OrderHistoryScreen(),
+                  ),
+                );
+              }),
+              _divider(),
+              _profileTile(
+                Icons.location_on_outlined,
+                l10n.shippingAddresses,
+                () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const AddressScreen(),
+                    ),
+                  );
+                },
+              ),
+              if (isAdmin) ...[
+                _divider(),
+                _profileTile(
+                  Icons.admin_panel_settings_outlined,
+                  l10n.adminDashboard,
+                  () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const AdminDashboardScreen(),
+                      ),
+                    );
+                  },
+                ),
+              ],
+              _divider(),
+              _profileTile(Icons.settings_outlined, l10n.settings, () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const SettingsScreen(),
+                  ),
+                );
+              }),
+              _divider(),
+              _profileTile(Icons.help_outline, l10n.helpCenter, () {}),
+              _divider(),
+              _profileTile(Icons.logout, l10n.logout, () async {
+                await context.read<AuthCubit>().signOut();
+              }, color: AppTheme.secondaryColor),
+            ],
+          );
+        },
       ),
     );
   }
@@ -133,7 +177,6 @@ class ProfileScreen extends StatelessWidget {
     IconData icon,
     String title,
     VoidCallback onTap, {
-    bool isLast = false,
     Color? color,
   }) {
     return ListTile(
