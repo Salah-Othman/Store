@@ -21,7 +21,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   final Set<String> _notifiedOrderIds = <String>{};
   DateTime? _lastNotifiedCreatedAt;
 
-  void _maybeNotifyNewOrders(List<OrderModel> orders) {
+  Future<void> _maybeNotifyNewOrders(List<OrderModel> orders) async {
     // Only notify once per order id while this screen is alive.
     final newestFirst = [...orders]..sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
@@ -39,7 +39,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
       // Use a stable-ish int id from the doc id hash.
       final notificationId = order.id.hashCode & 0x7fffffff;
-      LocalNotifications.showNewOrder(
+      await LocalNotifications.showNewOrder(
         id: notificationId,
         title: 'New Order',
         body: '${order.customerName} • ${order.totalPrice.toStringAsFixed(2)} EGP',
@@ -155,7 +155,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                       // In-app admin notification for new orders.
                       WidgetsBinding.instance.addPostFrameCallback((_) {
                         if (!mounted) return;
-                        _maybeNotifyNewOrders(orders);
+                        () async {
+                          await _maybeNotifyNewOrders(orders);
+                        }();
                       });
                       final users = userSnapshot.data?.docs ?? [];
                       final categories = (categorySnapshot.data?.docs ?? [])
