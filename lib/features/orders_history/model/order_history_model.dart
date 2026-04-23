@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 class OrderModel {
   final String id;
+  final String userId;
   final List<dynamic> items;
   final String customerName;
   final String customerPhone;
@@ -12,6 +13,7 @@ class OrderModel {
 
   OrderModel({
     required this.id,
+    required this.userId,
     required this.items,
     required this.customerName,
     required this.customerPhone,
@@ -26,6 +28,7 @@ class OrderModel {
 
     return OrderModel(
       id: id,
+      userId: data['userId'] ?? '',
       items: data['items'] ?? [],
       customerName: data['customerName'] ?? '',
       customerPhone: data['customerPhone'] ?? '',

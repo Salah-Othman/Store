@@ -251,8 +251,12 @@ class AppLocalizations {
   String get addedToCart =>
       isArabic ? 'تمت الإضافة إلى السلة بنجاح' : 'Added to cart successfully!';
   String get pending => isArabic ? 'قيد الانتظار' : 'Pending';
+  String get success => isArabic ? 'تم بنجاح' : 'Success';
   String get shipped => isArabic ? 'تم الشحن' : 'Shipped';
   String get delivered => isArabic ? 'تم التوصيل' : 'Delivered';
+  String get markAsSuccess => isArabic ? 'تحويل إلى ناجح' : 'Mark as Success';
+  String get orderMarkedSuccess =>
+      isArabic ? 'تم تحديث الطلب إلى ناجح' : 'Order marked as success';
 
   String languageName(String code) {
     switch (code) {
@@ -266,6 +270,8 @@ class AppLocalizations {
 
   String localizedOrderStatus(String status) {
     switch (status) {
+      case 'Success':
+        return success;
       case 'Delivered':
         return delivered;
       case 'Shipped':

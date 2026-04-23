@@ -33,13 +33,12 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final settingsBox = Hive.box('settings_box');
-
     return ScreenUtilInit(
       designSize: const Size(360, 813),
       minTextAdapt: true,
       splitScreenMode: true,
       builder: (_, child) {
-        return MultiBlocProvider(
+        return MultiBlocProvider( 
           providers: [
             BlocProvider(create: (_) => AuthCubit()),
             BlocProvider(create: (_) => CategoryCubit()),

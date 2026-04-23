@@ -6,8 +6,23 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
-class OrderHistoryScreen extends StatelessWidget {
+class OrderHistoryScreen extends StatefulWidget {
   const OrderHistoryScreen({super.key});
+
+  @override
+  State<OrderHistoryScreen> createState() => _OrderHistoryScreenState();
+}
+
+class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Fetch once when the screen opens.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      context.read<OrderHistoryCubit>().fetchMyOrders();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -23,12 +38,15 @@ class OrderHistoryScreen extends StatelessWidget {
           if (state is OrderHistoryEmpty) {
             return Center(child: Text(l10n.noOrdersFound));
           }
+          if (state is OrderHistoryError) {
+            return Center(child: Text(state.message));
+          }
           if (state is OrderHistoryLoaded) {
             return ListView.builder(
               padding: const EdgeInsets.all(16),
               itemCount: state.orders.length,
               itemBuilder: (context, index) =>
-                  _OrderCard(order: state.orders[index]),
+                  _orderCard(order: state.orders[index]),
             );
           }
           return Center(child: Text(l10n.somethingWentWrong));
@@ -37,7 +55,7 @@ class OrderHistoryScreen extends StatelessWidget {
     );
   }
 
-  Widget _OrderCard({required OrderModel order}) {
+  Widget _orderCard({required OrderModel order}) {
     return Builder(
       builder: (context) {
         final l10n = AppLocalizations.of(context);

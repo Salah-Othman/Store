@@ -1,6 +1,7 @@
 import 'package:TR/core/localization/app_localizations.dart';
 import 'package:bloc/bloc.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:hive_flutter/adapters.dart';
 import 'package:meta/meta.dart';
 
@@ -21,7 +22,13 @@ class CheckoutCubit extends Cubit<CheckoutState> {
     emit(CheckoutLoading());
 
     try {
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      if (uid == null) {
+        throw StateError('User not authenticated');
+      }
+
       final docRef = await _firestore.collection('Orders').add({
+        'userId': uid,
         'customerName': name.trim(),
         'customerPhone': phone.trim(),
         'customerAddress': address.trim(),
@@ -30,11 +37,6 @@ class CheckoutCubit extends Cubit<CheckoutState> {
         'status': 'Pending',
         'createdAt': FieldValue.serverTimestamp(),
       });
-
-      final box = Hive.box('orders_box');
-      final ids = List<String>.from(box.get('my_orders_ids') ?? []);
-      ids.add(docRef.id);
-      await box.put('my_orders_ids', ids);
 
       emit(CheckoutSuccess(docRef.id));
     } catch (e) {
