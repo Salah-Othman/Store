@@ -1,3 +1,4 @@
+import 'package:TR/core/localization/app_localizations.dart';
 import 'package:TR/core/theme/app_theme.dart';
 import 'package:TR/features/cart/logic/cubit/cart_cubit.dart';
 import 'package:TR/features/checkout/ui/screen/checkout_screen.dart';
@@ -10,11 +11,13 @@ class CartScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return Scaffold(
       backgroundColor: AppTheme.neutralColor,
       appBar: AppBar(
         title: Text(
-          "Shopping Bag",
+          l10n.cart,
           style: GoogleFonts.notoSerif(fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
@@ -43,7 +46,9 @@ class CartScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildCheckoutSection(BuildContext context, state) {
+  Widget _buildCheckoutSection(BuildContext context, CartState state) {
+    final l10n = AppLocalizations.of(context);
+
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: const BoxDecoration(
@@ -54,12 +59,12 @@ class CartScreen extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _row("Total Amount", "${state.totalPrice} EGP", isTotal: true),
+          _row(l10n.totalAmount, "${state.totalPrice} EGP", isTotal: true),
           const SizedBox(height: 20),
           ElevatedButton(
             onPressed: () => Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => CheckoutScreen()),
+              MaterialPageRoute(builder: (context) => const CheckoutScreen()),
             ),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppTheme.primaryColor,
@@ -68,9 +73,9 @@ class CartScreen extends StatelessWidget {
                 borderRadius: BorderRadius.circular(15),
               ),
             ),
-            child: const Text(
-              "Go to Checkout",
-              style: TextStyle(color: Colors.white, fontSize: 18),
+            child: Text(
+              l10n.goToCheckout,
+              style: const TextStyle(color: Colors.white, fontSize: 18),
             ),
           ),
         ],
@@ -101,16 +106,18 @@ class CartScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildEmptyState(context) {
+  Widget _buildEmptyState(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(Icons.shopping_bag_outlined, size: 80, color: Colors.grey[300]),
           const SizedBox(height: 16),
-          const Text(
-            "Your bag is empty",
-            style: TextStyle(color: Colors.grey, fontSize: 18),
+          Text(
+            l10n.yourBagIsEmpty,
+            style: const TextStyle(color: Colors.grey, fontSize: 18),
           ),
         ],
       ),
@@ -120,6 +127,7 @@ class CartScreen extends StatelessWidget {
 
 class _CartItemTile extends StatelessWidget {
   final dynamic item;
+
   const _CartItemTile({required this.item});
 
   @override
@@ -164,6 +172,7 @@ class _CartItemTile extends StatelessWidget {
 
 class _QuantityControls extends StatelessWidget {
   final dynamic item;
+
   const _QuantityControls({required this.item});
 
   @override

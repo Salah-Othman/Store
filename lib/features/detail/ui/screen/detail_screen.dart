@@ -1,3 +1,4 @@
+import 'package:TR/core/localization/app_localizations.dart';
 import 'package:TR/core/theme/app_theme.dart';
 import 'package:TR/core/utils/app_sizes.dart';
 import 'package:TR/features/cart/logic/cubit/cart_cubit.dart';
@@ -14,23 +15,22 @@ class DetailsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: CustomScrollView(
         slivers: [
-          // 1. الجزء العلوي (الصورة مع تأثير الـ Elastic)
           SliverAppBar(
             expandedHeight: 400,
             pinned: true,
             flexibleSpace: FlexibleSpaceBar(
               background: Hero(
-                tag: product.id, // لعمل انتقال ناعم بين الصفحات
+                tag: product.id,
                 child: Image.network(product.imageUrl, fit: BoxFit.cover),
               ),
             ),
           ),
-
-          // 2. تفاصيل المنتج
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.all(AppSizes.p24),
@@ -60,7 +60,6 @@ class DetailsScreen extends StatelessWidget {
                       ),
                     ],
                   ),
-
                   const SizedBox(height: 8),
                   Text(
                     product.category,
@@ -71,7 +70,7 @@ class DetailsScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 24),
                   Text(
-                    "Description",
+                    l10n.description,
                     style: GoogleFonts.manrope(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -86,23 +85,23 @@ class DetailsScreen extends StatelessWidget {
                       height: 1.6,
                     ),
                   ),
-                  const SizedBox(height: 100), // مساحة للـ Bottom Bar
+                  const SizedBox(height: 100),
                 ],
               ),
             ),
           ),
         ],
       ),
-
-      // 3. زر الإضافة للسلة (ثابت في الأسفل)
       bottomSheet: _buildBottomAction(context),
     );
   }
 
   Widget _buildBottomAction(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return Container(
       padding: const EdgeInsets.all(AppSizes.p24),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: Colors.white,
         boxShadow: [
           BoxShadow(
@@ -115,16 +114,14 @@ class DetailsScreen extends StatelessWidget {
       child: SafeArea(
         child: ElevatedButton(
           onPressed: () {
-            // تنفيذ الإضافة للسلة
             context.read<CartCubit>().addToCart(product);
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => CartScreen()),
+              MaterialPageRoute(builder: (context) => const CartScreen()),
             );
-            // إظهار رسالة تأكيد احترافية (SnackBar)
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: const Text("Added to cart successfully!"),
+                content: Text(l10n.addedToCart),
                 backgroundColor: AppTheme.success,
                 behavior: SnackBarBehavior.floating,
                 duration: const Duration(seconds: 1),
@@ -139,7 +136,7 @@ class DetailsScreen extends StatelessWidget {
             ),
           ),
           child: Text(
-            "Add to Cart",
+            l10n.addToCart,
             style: GoogleFonts.manrope(
               fontSize: 18,
               fontWeight: FontWeight.bold,
