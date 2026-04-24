@@ -2,10 +2,9 @@ import 'package:TR/core/localization/app_localizations.dart';
 import 'package:bloc/bloc.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:hive_flutter/adapters.dart';
-import 'package:meta/meta.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
-part 'cheackout_state.dart';
+part 'checkout_state.dart';
 
 class CheckoutCubit extends Cubit<CheckoutState> {
   CheckoutCubit() : super(CheckoutInitial());

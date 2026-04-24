@@ -2,7 +2,7 @@ import 'package:TR/core/localization/app_localizations.dart';
 import 'package:TR/core/theme/app_theme.dart';
 import 'package:TR/features/address/model/address_model.dart';
 import 'package:TR/features/cart/logic/cubit/cart_cubit.dart';
-import 'package:TR/features/checkout/logic/cubit/cheackout_cubit.dart';
+import 'package:TR/features/checkout/logic/cubit/checkout_cubit.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';

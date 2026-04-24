@@ -1,6 +1,5 @@
-part of 'cheackout_cubit.dart';
+part of 'checkout_cubit.dart';
 
-@immutable
 abstract class CheckoutState {}
 
 class CheckoutInitial extends CheckoutState {}
