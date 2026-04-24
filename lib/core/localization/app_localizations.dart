@@ -167,7 +167,7 @@ class AppLocalizations {
   String get supportAndAbout =>
       isArabic ? 'الدعم والمعلومات' : 'Support & About';
   String get privacyPolicy => isArabic ? 'سياسة الخصوصية' : 'Privacy Policy';
-  String get aboutAtelier => isArabic ? 'عن أتولييه' : 'About Atelier';
+  String get aboutTR => isArabic ? 'عن $appName' : 'About $appName';
   String get chooseLanguage => isArabic ? 'اختر اللغة' : 'Choose Language';
   String get shippingAddress => isArabic ? 'عنوان الشحن' : 'Shipping Address';
   String get city => isArabic ? 'المدينة' : 'City';
@@ -271,6 +271,33 @@ class AppLocalizations {
       isArabic ? 'تم حذف البنر بنجاح' : 'Banner deleted successfully';
   String get edit => isArabic ? 'تعديل' : 'Edit';
   String get delete => isArabic ? 'حذف' : 'Delete';
+
+  // Onboarding
+  String get skip => isArabic ? 'تخطي' : 'Skip';
+  String get next => isArabic ? 'التالي' : 'Next';
+  String get done => isArabic ? 'تم' : 'Done';
+  String get getStarted => isArabic ? 'ابدأ الآن' : 'Get Started';
+
+  String get onboardingTitle1 => isArabic
+      ? 'أسرع توصيل في المدينة'
+      : 'Fastest Delivery';
+  String get onboardingDesc1 => isArabic
+      ? 'سيصل طلبك بسرعة وبأفضل حالة'
+      : 'Your order will arrive quickly and in the best condition';
+
+  String get onboardingTitle2 => isArabic
+      ? 'حدد موقعك بدقة'
+      : 'Locate Yourself Precisely';
+  String get onboardingDesc2 => isArabic
+      ? 'لا تقلق من وصف العنوان، الخريطة ستأخذنا إلى باب منزلك'
+      : "Don't worry about the address description, the map will take us right to your doorstep";
+
+  String get onboardingTitle3 => isArabic
+      ? 'ادفع بالطريقة التي تناسبك'
+      : 'Pay Your Way';
+  String get onboardingDesc3 => isArabic
+      ? 'سواء نقدًا أو بطاقة، نؤمن جميع طرق الدفع'
+      : 'Whether cash or card, we secure all payment methods';
 
   String languageName(String code) {
     switch (code) {
