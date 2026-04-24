@@ -1,6 +1,7 @@
 import 'package:TR/core/localization/app_localizations.dart';
 import 'package:TR/core/theme/app_theme.dart';
 import 'package:TR/features/cart/logic/cubit/cart_cubit.dart';
+import 'package:TR/features/cart/model/cart_item_model.dart';
 import 'package:TR/features/checkout/ui/screen/checkout_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -126,7 +127,7 @@ class CartScreen extends StatelessWidget {
 }
 
 class _CartItemTile extends StatelessWidget {
-  final dynamic item;
+  final CartItem item;
 
   const _CartItemTile({required this.item});
 
@@ -171,7 +172,7 @@ class _CartItemTile extends StatelessWidget {
 }
 
 class _QuantityControls extends StatelessWidget {
-  final dynamic item;
+  final CartItem item;
 
   const _QuantityControls({required this.item});
 
