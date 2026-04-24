@@ -31,9 +31,10 @@ class ProductModel {
     );
   }
 
-  // To Firestore
-  Map<String, dynamic> toFirestore() {
+  // To Map (for local storage)
+  Map<String, dynamic> toMap() {
     return {
+      'id': id,
       'name': name,
       'description': description,
       'price': price,
@@ -41,5 +42,18 @@ class ProductModel {
       'category': category,
       'isAvailable': isAvailable,
     };
+  }
+
+  // From Map (for local storage)
+  factory ProductModel.fromMap(Map<String, dynamic> json) {
+    return ProductModel(
+      id: json['id'] ?? '',
+      name: json['name'] ?? '',
+      description: json['description'] ?? '',
+      price: (json['price'] ?? 0.0).toDouble(),
+      imageUrl: json['imageUrl'] ?? '',
+      category: json['category'] ?? 'General',
+      isAvailable: json['isAvailable'] ?? true,
+    );
   }
 }
