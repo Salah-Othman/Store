@@ -35,8 +35,8 @@ dependencies:
   flutter_native_splash: ^2.4.7
   shimmer: ^3.0.0
   intl: ^0.20.2  
-  flutter_local_notifications: ^21.0.0
-  firebase_messaging: ^16.2.0
+  lottie: ^3.3.3
+  smooth_page_indicator: ^2.0.1
   
 dev_dependencies:
   flutter_test:
@@ -54,6 +54,8 @@ flutter:
 
   assets:
     - assets/images/
+    - assets/lottie/
+
 
 flutter_launcher_icons:
   android: true

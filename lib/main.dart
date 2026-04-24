@@ -1,15 +1,13 @@
 import 'package:TR/core/localization/app_localizations.dart';
 import 'package:TR/core/theme/app_theme.dart';
 import 'package:TR/features/auth/logic/cubit/auth_cubit.dart';
-import 'package:TR/features/auth/ui/screen/auth_gate.dart';
 import 'package:TR/features/cart/logic/cubit/cart_cubit.dart';
-import 'package:TR/features/checkout/logic/cubit/cheackout_cubit.dart';
+import 'package:TR/features/checkout/logic/cubit/checkout_cubit.dart';
 import 'package:TR/features/home/logic/category/category_cubit.dart';
 import 'package:TR/features/home/logic/products/products_cubit.dart';
 import 'package:TR/features/orders_history/logic/cubit/order_history_cubit.dart';
 import 'package:TR/firebase_options.dart';
-import 'package:TR/core/notifications/local_notifications.dart';
-import 'package:TR/core/notifications/firebase_notifications.dart';
+import 'package:TR/splash_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -20,9 +18,6 @@ import 'package:hive_flutter/adapters.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-
-  await LocalNotifications.init();
-  await FirebaseNotifications.init();
 
   await Hive.initFlutter();
   await Hive.openBox('cart_box');
@@ -48,7 +43,7 @@ class MyApp extends StatelessWidget {
             BlocProvider(create: (_) => AuthCubit()),
             BlocProvider(create: (_) => CategoryCubit()),
             BlocProvider(create: (_) => ProductsCubit()),
-            BlocProvider(create: (_) => CartCubit()),
+            BlocProvider(create: (_) => CartCubit()..init()),
             BlocProvider(create: (_) => CheckoutCubit()),
             BlocProvider(create: (_) => OrderHistoryCubit()),
           ],
@@ -75,7 +70,7 @@ class MyApp extends StatelessWidget {
                   GlobalCupertinoLocalizations.delegate,
                 ],
                 debugShowCheckedModeBanner: false,
-                home: const AuthGate(),
+                home: const SplashScreen(),
               );
             },
           ),
