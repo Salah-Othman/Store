@@ -1,8 +1,10 @@
 import 'package:TR/core/localization/app_localizations.dart';
 import 'package:TR/core/theme/app_theme.dart';
+import 'package:TR/core/utils/responsive_helper.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AddressScreen extends StatefulWidget {
@@ -60,6 +62,8 @@ class _AddressScreenState extends State<AddressScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final surfaceColor = Theme.of(context).colorScheme.surface;
+    final textColor = Theme.of(context).colorScheme.onSurface;
 
     return Scaffold(
       appBar: AppBar(
@@ -68,33 +72,35 @@ class _AddressScreenState extends State<AddressScreen> {
           style: GoogleFonts.notoSerif(fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
+        backgroundColor: surfaceColor,
       ),
       body: Form(
         key: _formKey,
         child: ListView(
-          padding: const EdgeInsets.all(24),
+          padding: EdgeInsets.all(24.w),
           children: [
-            _buildInputLabel(l10n.city),
-            _addressField(_cityController, l10n.cityHint, Icons.location_city),
-            const SizedBox(height: 20),
-            _buildInputLabel(l10n.areaDistrict),
-            _addressField(_areaController, l10n.areaHint, Icons.map_outlined),
-            const SizedBox(height: 20),
-            _buildInputLabel(l10n.streetName),
-            _addressField(_streetController, l10n.streetHint, Icons.streetview),
-            const SizedBox(height: 20),
-            _buildInputLabel(l10n.buildingVilla),
+            _buildInputLabel(l10n.city, textColor),
+            _addressField(_cityController, l10n.cityHint, Icons.location_city, textColor),
+            SizedBox(height: 20.h),
+            _buildInputLabel(l10n.areaDistrict, textColor),
+            _addressField(_areaController, l10n.areaHint, Icons.map_outlined, textColor),
+            SizedBox(height: 20.h),
+            _buildInputLabel(l10n.streetName, textColor),
+            _addressField(_streetController, l10n.streetHint, Icons.streetview, textColor),
+            SizedBox(height: 20.h),
+            _buildInputLabel(l10n.buildingVilla, textColor),
             _addressField(
               _buildingController,
               l10n.buildingHint,
               Icons.home_work_outlined,
+              textColor,
             ),
-            const SizedBox(height: 50),
+            SizedBox(height: 50.h),
             ElevatedButton(
               onPressed: _saveAddress,
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppTheme.primaryColor,
-                minimumSize: const Size(double.infinity, 55),
+                minimumSize: Size(double.infinity, 55.h),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(15),
                 ),
@@ -102,7 +108,7 @@ class _AddressScreenState extends State<AddressScreen> {
               child: Text(
                 l10n.saveAddress,
                 style: GoogleFonts.manrope(
-                  fontSize: 18,
+                  fontSize: 18.sp,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
                 ),
@@ -114,9 +120,9 @@ class _AddressScreenState extends State<AddressScreen> {
     );
   }
 
-  Widget _buildInputLabel(String label) {
+  Widget _buildInputLabel(String label, Color textColor) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8, left: 4),
+      padding: EdgeInsets.only(bottom: 8.h, left: 4.w),
       child: Text(
         label,
         style: GoogleFonts.manrope(
@@ -131,16 +137,19 @@ class _AddressScreenState extends State<AddressScreen> {
     TextEditingController controller,
     String hint,
     IconData icon,
+    Color textColor,
   ) {
     final l10n = AppLocalizations.of(context);
+    final surfaceColor = Theme.of(context).colorScheme.surface;
 
     return TextFormField(
       controller: controller,
+      style: TextStyle(color: textColor),
       decoration: InputDecoration(
         hintText: hint,
         prefixIcon: Icon(icon, color: AppTheme.secondaryColor),
         filled: true,
-        fillColor: Colors.white,
+        fillColor: surfaceColor,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide.none,
@@ -173,7 +182,7 @@ class _AddressScreenState extends State<AddressScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(l10n.addressSaved),
-            backgroundColor: Colors.green,
+            backgroundColor: AppTheme.success,
           ),
         );
         Navigator.pop(context);
@@ -182,7 +191,7 @@ class _AddressScreenState extends State<AddressScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(l10n.somethingWentWrong),
-            backgroundColor: Colors.red,
+            backgroundColor: AppTheme.error,
           ),
         );
       }

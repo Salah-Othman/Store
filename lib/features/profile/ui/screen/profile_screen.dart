@@ -22,18 +22,17 @@ class ProfileScreen extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final isDesktop = context.isDesktop;
     final isTablet = context.isTablet;
+    final scaffoldBg = Theme.of(context).scaffoldBackgroundColor;
 
     return Scaffold(
-      backgroundColor: AppTheme.neutralColor,
+      backgroundColor: scaffoldBg,
       appBar: AppBar(
         title: Text(
           l10n.myProfile,
           style: GoogleFonts.notoSerif(fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
-        backgroundColor: Colors.white,
         elevation: 0.5,
-        foregroundColor: AppTheme.primaryColor,
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -48,7 +47,7 @@ class ProfileScreen extends StatelessWidget {
             SizedBox(height: 20.h),
             Text(
               l10n.version,
-              style: TextStyle(color: Colors.grey[500], fontSize: 12.sp),
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5), fontSize: 12.sp),
             ),
             SizedBox(height: 20.h),
           ],
@@ -97,7 +96,7 @@ class ProfileScreen extends StatelessWidget {
         ),
         Text(
           email ?? l10n.guestSessionId('8821'),
-          style: GoogleFonts.manrope(color: Colors.grey),
+          style: GoogleFonts.manrope(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6)),
         ),
       ],
     );
@@ -106,11 +105,13 @@ class ProfileScreen extends StatelessWidget {
   Widget _buildMenuSection(BuildContext context, {required bool isDesktop}) {
     final l10n = AppLocalizations.of(context);
     final currentUser = FirebaseAuth.instance.currentUser;
+    final surfaceColor = Theme.of(context).colorScheme.surface;
+    final dividerColor = Theme.of(context).dividerColor;
 
     return Container(
       margin: EdgeInsets.symmetric(horizontal: isDesktop ? 80.w : AppSizes.p16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: surfaceColor,
         borderRadius: BorderRadius.circular(20),
       ),
       child: StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
@@ -133,7 +134,7 @@ class ProfileScreen extends StatelessWidget {
                   ),
                 );
               }, isDesktop: isDesktop),
-              _divider(),
+              _divider(color: dividerColor),
               _profileTile(
                 Icons.location_on_outlined,
                 l10n.shippingAddresses,
@@ -148,7 +149,7 @@ class ProfileScreen extends StatelessWidget {
                 isDesktop: isDesktop,
               ),
               if (isAdmin) ...[
-                _divider(),
+                _divider(color: dividerColor),
                 _profileTile(
                   Icons.admin_panel_settings_outlined,
                   l10n.adminDashboard,
@@ -163,7 +164,7 @@ class ProfileScreen extends StatelessWidget {
                   isDesktop: isDesktop,
                 ),
               ],
-              _divider(),
+              _divider(color: dividerColor),
               _profileTile(Icons.settings_outlined, l10n.settings, () {
                 Navigator.push(
                   context,
@@ -172,9 +173,9 @@ class ProfileScreen extends StatelessWidget {
                   ),
                 );
               }, isDesktop: isDesktop),
-              _divider(),
+              _divider(color: dividerColor),
               _profileTile(Icons.help_outline, l10n.helpCenter, () {}, isDesktop: isDesktop),
-              _divider(),
+              _divider(color: dividerColor),
               _profileTile(Icons.logout, l10n.logout, () async {
                 await context.read<AuthCubit>().signOut();
               }, color: AppTheme.secondaryColor, isDesktop: isDesktop),
@@ -192,13 +193,14 @@ class ProfileScreen extends StatelessWidget {
     Color? color,
     required bool isDesktop,
   }) {
+    final iconColor = color ?? AppTheme.primaryColor;
     return ListTile(
-      leading: Icon(icon, color: color ?? AppTheme.primaryColor, size: isDesktop ? 28.sp : null),
+      leading: Icon(icon, color: iconColor, size: isDesktop ? 28.sp : null),
       title: Text(
         title,
         style: GoogleFonts.manrope(
           fontWeight: FontWeight.w600,
-          color: color ?? AppTheme.primaryColor,
+          color: iconColor,
           fontSize: isDesktop ? 18.sp : null,
         ),
       ),
@@ -207,5 +209,5 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _divider() => Divider(height: 1, indent: 50, color: Colors.grey[100]);
+  Widget _divider({Color? color}) => Divider(height: 1, indent: 50, color: color ?? Colors.grey[100]);
 }

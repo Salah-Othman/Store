@@ -1,6 +1,7 @@
 import 'package:TR/core/localization/app_localizations.dart';
 import 'package:TR/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
@@ -23,9 +24,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final scaffoldBg = Theme.of(context).scaffoldBackgroundColor;
+    final surfaceColor = Theme.of(context).colorScheme.surface;
+    final textColor = Theme.of(context).colorScheme.onSurface;
+    final subtitleColor = Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6);
 
     return Scaffold(
-      backgroundColor: AppTheme.neutralColor,
+      backgroundColor: scaffoldBg,
       appBar: AppBar(
         title: Text(
           l10n.settings,
@@ -34,10 +39,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
         centerTitle: true,
       ),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(16.w),
         children: [
-          _buildSectionTitle(l10n.appearance),
-          _buildSettingsCard([
+          _buildSectionTitle(l10n.appearance, textColor),
+          _buildSettingsCard(surfaceColor, [
             ValueListenableBuilder(
               valueListenable: _settingsBox.listenable(keys: ['isDarkMode']),
               builder: (context, Box box, _) {
@@ -48,6 +53,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   title: l10n.darkMode,
                   value: isDark,
                   onChanged: (val) => box.put('isDarkMode', val),
+                  textColor: textColor,
+                  subtitleColor: subtitleColor,
                 );
               },
             ),
@@ -63,13 +70,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   l10n.language,
                   () => _showLanguageSheet(context, languageCode),
                   subtitle: l10n.languageName(languageCode),
+                  textColor: textColor,
+                  subtitleColor: subtitleColor,
                 );
               },
             ),
           ]),
-          const SizedBox(height: 24),
-          _buildSectionTitle(l10n.notifications),
-          _buildSettingsCard([
+          SizedBox(height: 24.h),
+          _buildSectionTitle(l10n.notifications, textColor),
+          _buildSettingsCard(surfaceColor, [
             ValueListenableBuilder(
               valueListenable: _settingsBox.listenable(
                 keys: ['pushNotifications'],
@@ -84,47 +93,51 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   subtitle: l10n.pushNotificationsSubtitle,
                   value: notificationsEnabled,
                   onChanged: (val) => box.put('pushNotifications', val),
+                  textColor: textColor,
+                  subtitleColor: subtitleColor,
                 );
               },
             ),
           ]),
-          const SizedBox(height: 24),
-          _buildSectionTitle(l10n.supportAndAbout),
-          _buildSettingsCard([
-            _buildNavigationTile(Icons.help_outline, l10n.helpCenter, () {}),
+          SizedBox(height: 24.h),
+          _buildSectionTitle(l10n.supportAndAbout, textColor),
+          _buildSettingsCard(surfaceColor, [
+            _buildNavigationTile(Icons.help_outline, l10n.helpCenter, () {}, textColor: textColor, subtitleColor: subtitleColor),
             _buildDivider(),
             _buildNavigationTile(
               Icons.policy_outlined,
               l10n.privacyPolicy,
               () {},
+              textColor: textColor,
+              subtitleColor: subtitleColor,
             ),
             _buildDivider(),
-            _buildNavigationTile(Icons.info_outline, l10n.aboutTR, () {}),
+            _buildNavigationTile(Icons.info_outline, l10n.aboutTR, () {}, textColor: textColor, subtitleColor: subtitleColor),
           ]),
         ],
       ),
     );
   }
 
-  Widget _buildSectionTitle(String title) {
+  Widget _buildSectionTitle(String title, Color textColor) {
     return Padding(
-      padding: const EdgeInsets.only(left: 8, bottom: 8),
+      padding: EdgeInsets.only(left: 8.w, bottom: 8.h),
       child: Text(
         title.toUpperCase(),
         style: GoogleFonts.manrope(
-          fontSize: 12,
+          fontSize: 12.sp,
           fontWeight: FontWeight.bold,
-          color: Colors.grey[600],
+          color: textColor.withValues(alpha: 0.5),
           letterSpacing: 1.2,
         ),
       ),
     );
   }
 
-  Widget _buildSettingsCard(List<Widget> children) {
+  Widget _buildSettingsCard(Color surfaceColor, List<Widget> children) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: surfaceColor,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(children: children),
@@ -137,22 +150,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
     String? subtitle,
     required bool value,
     required Function(bool) onChanged,
+    required Color textColor,
+    required Color subtitleColor,
   }) {
     return ListTile(
       leading: Icon(icon, color: AppTheme.primaryColor),
       title: Text(
         title,
-        style: GoogleFonts.manrope(fontWeight: FontWeight.w500),
+        style: GoogleFonts.manrope(fontWeight: FontWeight.w500, color: textColor),
       ),
       subtitle: subtitle == null
           ? null
           : Text(
               subtitle,
-              style: GoogleFonts.manrope(fontSize: 12, color: Colors.grey[600]),
+              style: GoogleFonts.manrope(fontSize: 12.sp, color: subtitleColor),
             ),
       trailing: Switch.adaptive(
         value: value,
-        activeThumbColor: AppTheme.secondaryColor,
+        activeColor: AppTheme.secondaryColor,
         onChanged: onChanged,
       ),
     );
@@ -163,20 +178,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
     String title,
     VoidCallback onTap, {
     String? subtitle,
+    required Color textColor,
+    required Color subtitleColor,
   }) {
     return ListTile(
       leading: Icon(icon, color: AppTheme.primaryColor),
       title: Text(
         title,
-        style: GoogleFonts.manrope(fontWeight: FontWeight.w500),
+        style: GoogleFonts.manrope(fontWeight: FontWeight.w500, color: textColor),
       ),
       subtitle: subtitle == null
           ? null
           : Text(
               subtitle,
-              style: GoogleFonts.manrope(fontSize: 12, color: Colors.grey[600]),
+              style: GoogleFonts.manrope(fontSize: 12.sp, color: subtitleColor),
             ),
-      trailing: const Icon(Icons.arrow_forward_ios, size: 14),
+      trailing: Icon(Icons.arrow_forward_ios, size: 14.sp),
       onTap: onTap,
     );
   }
@@ -190,6 +207,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     await showModalBottomSheet<void>(
       context: context,
       builder: (sheetContext) {
+        final surfaceColor = Theme.of(sheetContext).colorScheme.surface;
+        final textColor = Theme.of(sheetContext).colorScheme.onSurface;
+
         return SafeArea(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -197,7 +217,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ListTile(
                 title: Text(
                   l10n.chooseLanguage,
-                  style: GoogleFonts.notoSerif(fontWeight: FontWeight.bold),
+                  style: GoogleFonts.notoSerif(fontWeight: FontWeight.bold, color: textColor),
                 ),
               ),
               ListTile(
@@ -207,7 +227,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       : Icons.radio_button_off,
                   color: AppTheme.secondaryColor,
                 ),
-                title: Text(l10n.english),
+                title: Text(l10n.english, style: GoogleFonts.manrope(color: textColor)),
                 onTap: () {
                   _settingsBox.put('appLanguage', 'en');
                   Navigator.pop(sheetContext);
@@ -220,7 +240,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       : Icons.radio_button_off,
                   color: AppTheme.secondaryColor,
                 ),
-                title: Text(l10n.arabic),
+                title: Text(l10n.arabic, style: GoogleFonts.manrope(color: textColor)),
                 onTap: () {
                   _settingsBox.put('appLanguage', 'ar');
                   Navigator.pop(sheetContext);
@@ -233,6 +253,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _buildDivider() =>
-      Divider(height: 1, indent: 55, color: Colors.grey[100]);
+  Widget _buildDivider() {
+    final dividerColor = Theme.of(context).dividerColor;
+    return Divider(height: 1, indent: 55, color: dividerColor);
+  }
 }

@@ -27,6 +27,8 @@ class _OnBoardingScreenState extends State<OnBoardingScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final textColor = Theme.of(context).colorScheme.onSurface;
+    final subtitleColor = textColor.withValues(alpha: 0.6);
 
     return Scaffold(
       body: SafeArea(
@@ -41,7 +43,7 @@ class _OnBoardingScreenState extends State<OnBoardingScreen> {
                 ),
                 child: Text(
                   l10n.skip,
-                  style: TextStyle(color: Colors.grey[600]),
+                  style: TextStyle(color: subtitleColor),
                 ),
               ),
             ),
@@ -68,7 +70,7 @@ class _OnBoardingScreenState extends State<OnBoardingScreen> {
                           style: TextStyle(
                             fontSize: 28.sp,
                             fontWeight: FontWeight.bold,
-                            color: AppTheme.primaryColor,
+                            color: textColor,
                           ),
                           textAlign: TextAlign.center,
                         ),
@@ -81,7 +83,7 @@ class _OnBoardingScreenState extends State<OnBoardingScreen> {
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontSize: 16.sp,
-                            color: AppTheme.tertiaryColor,
+                            color: subtitleColor,
                           ),
                         ),
                       ),

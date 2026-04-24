@@ -5,6 +5,7 @@ import 'package:TR/features/home/logic/category/category_cubit.dart';
 import 'package:TR/features/home/logic/products/products_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class CategoryItem extends StatefulWidget {
@@ -15,24 +16,25 @@ class CategoryItem extends StatefulWidget {
 }
 
 class _CategoryItemState extends State<CategoryItem> {
-  // "All" هو الاختيار الافتراضي عند فتح التطبيق
   String selectedCategory = "All";
 
   @override
   Widget build(BuildContext context) {
+    final surfaceColor = Theme.of(context).colorScheme.surface;
+    final textColor = Theme.of(context).colorScheme.onSurface;
+
     return SizedBox(
       height: 45,
       child: BlocBuilder<CategoryCubit, CategoryState>(
         builder: (context, state) {
           if (state is CategoryLoading) return const CategoryShimmer();
-          
+
           if (state is CategoryLoaded) {
-            
             final List<String> categories = ["All", ...state.categories.map((e) => e.name)];
 
             return ListView.builder(
               scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: AppSizes.p16),
+              padding: EdgeInsets.symmetric(horizontal: AppSizes.p16),
               itemCount: categories.length,
               itemBuilder: (context, index) {
                 final categoryName = categories[index];
@@ -43,19 +45,18 @@ class _CategoryItemState extends State<CategoryItem> {
                     setState(() {
                       selectedCategory = categoryName;
                     });
-                    // نداء الـ Cubit لفلترة المنتجات
                     context.read<ProductsCubit>().getProductsByCategory(categoryName);
                   },
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 300),
-                    margin: const EdgeInsets.only(right: 12),
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    margin: EdgeInsets.only(right: 12.w),
+                    padding: EdgeInsets.symmetric(horizontal: 20.w),
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
-                      color: isSelected ? AppTheme.primaryColor : Colors.white,
-                      borderRadius: BorderRadius.circular(25), // تصميم Round للأناقة
+                      color: isSelected ? AppTheme.primaryColor : surfaceColor,
+                      borderRadius: BorderRadius.circular(25),
                       border: Border.all(
-                        color: isSelected ? AppTheme.secondaryColor : Colors.grey[300]!,
+                        color: isSelected ? AppTheme.secondaryColor : textColor.withValues(alpha: 0.2),
                         width: 1.5,
                       ),
                     ),
@@ -63,7 +64,7 @@ class _CategoryItemState extends State<CategoryItem> {
                       categoryName,
                       style: GoogleFonts.manrope(
                         fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                        color: isSelected ? Colors.white : AppTheme.tertiaryColor,
+                        color: isSelected ? Colors.white : textColor,
                       ),
                     ),
                   ),

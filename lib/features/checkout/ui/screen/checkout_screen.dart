@@ -1,11 +1,13 @@
 import 'package:TR/core/localization/app_localizations.dart';
 import 'package:TR/core/theme/app_theme.dart';
+import 'package:TR/core/utils/responsive_helper.dart';
 import 'package:TR/features/cart/logic/cubit/cart_cubit.dart';
 import 'package:TR/features/checkout/logic/cubit/checkout_cubit.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class CheckoutScreen extends StatefulWidget {
   const CheckoutScreen({super.key});
@@ -50,9 +52,14 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final surfaceColor = Theme.of(context).colorScheme.surface;
+    final textColor = Theme.of(context).colorScheme.onSurface;
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.checkout)),
+      appBar: AppBar(
+        title: Text(l10n.checkout, style: TextStyle(color: textColor)),
+        backgroundColor: surfaceColor,
+      ),
       body: BlocConsumer<CheckoutCubit, CheckoutState>(
         listener: (context, state) {
           if (state is CheckoutSuccess) {
@@ -69,42 +76,39 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           return Form(
             key: _formKey,
             child: ListView(
-              padding: const EdgeInsets.all(20),
+              padding: EdgeInsets.all(20.w),
               children: [
-                _buildField(_nameController, l10n.fullName, Icons.person),
-                const SizedBox(height: 15),
+                _buildField(_nameController, l10n.fullName, Icons.person, textColor: textColor),
+                SizedBox(height: 15.h),
                 _buildField(
                   _phoneController,
                   l10n.phoneNumber,
                   Icons.phone,
                   isPhone: true,
+                  textColor: textColor,
                 ),
-                const SizedBox(height: 15),
-                Text(l10n.shippingAddress,
-                    style: TextStyle(
-                        fontWeight: FontWeight.bold, fontSize: 16)),
-                const SizedBox(height: 8),
+                SizedBox(height: 15.h),
+                Text(
+                  l10n.shippingAddress,
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16.sp, color: textColor),
+                ),
+                SizedBox(height: 8.h),
                 Row(
                   children: [
                     Expanded(
                       child: DropdownButtonFormField<String>(
                         value: _selectedAddress,
-                        hint: Text(l10n.shippingAddress),
+                        hint: Text(l10n.shippingAddress, style: TextStyle(color: textColor)),
                         decoration: InputDecoration(
-                          prefixIcon: Icon(Icons.location_on),
-                          border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12)),
+                          prefixIcon: Icon(Icons.location_on, color: AppTheme.primaryColor),
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                         ),
                         items: [
                           ..._savedAddresses.map((addr) {
                             final fullAddr = _formatAddress(addr);
                             return DropdownMenuItem(
                               value: fullAddr,
-                              child: Text(fullAddr,
-                                  overflow: TextOverflow.ellipsis,
-                                  maxLines: 2,
-                                  
-                                  ),
+                              child: Text(fullAddr, overflow: TextOverflow.ellipsis, maxLines: 2),
                             );
                           }),
                         ],
@@ -116,7 +120,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                         },
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    SizedBox(width: 8.w),
                     IconButton(
                       onPressed: () {
                         setState(() {
@@ -125,41 +129,35 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                         });
                       },
                       icon: Icon(
-                        _showNewAddressForm
-                            ? Icons.keyboard_arrow_up
-                            : Icons.add_location_alt,
+                        _showNewAddressForm ? Icons.keyboard_arrow_up : Icons.add_location_alt,
                         color: AppTheme.primaryColor,
-                        size: 30,
+                        size: 30.sp,
                       ),
                     ),
                   ],
                 ),
                 if (_showNewAddressForm) ...[
-                  const SizedBox(height: 15),
-                  _buildField(_cityController, l10n.city, Icons.location_city),
-                  const SizedBox(height: 12),
-                  _buildField(_areaController, l10n.areaDistrict, Icons.map),
-                  const SizedBox(height: 12),
-                  _buildField(_streetController, l10n.streetName, Icons.streetview),
-                  const SizedBox(height: 12),
-                  _buildField(
-                      _buildingController, l10n.buildingVilla, Icons.home),
+                  SizedBox(height: 15.h),
+                  _buildField(_cityController, l10n.city, Icons.location_city, textColor: textColor),
+                  SizedBox(height: 12.h),
+                  _buildField(_areaController, l10n.areaDistrict, Icons.map, textColor: textColor),
+                  SizedBox(height: 12.h),
+                  _buildField(_streetController, l10n.streetName, Icons.streetview, textColor: textColor),
+                  SizedBox(height: 12.h),
+                  _buildField(_buildingController, l10n.buildingVilla, Icons.home, textColor: textColor),
                 ],
-                const SizedBox(height: 40),
+                SizedBox(height: 40.h),
                 state is CheckoutLoading
-                    ? const Center(child: CircularProgressIndicator())
+                    ? Center(child: CircularProgressIndicator(color: AppTheme.primaryColor))
                     : ElevatedButton(
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppTheme.primaryColor,
-                          minimumSize: const Size(double.infinity, 55),
+                          minimumSize: Size(double.infinity, 55.h),
                         ),
                         onPressed: () => _submitOrder(context),
                         child: Text(
                           l10n.confirmOrder,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 18,
-                          ),
+                          style: TextStyle(color: Colors.white, fontSize: 18.sp),
                         ),
                       ),
               ],
@@ -176,6 +174,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     IconData icon, {
     bool isPhone = false,
     int maxLines = 1,
+    required Color textColor,
   }) {
     final l10n = AppLocalizations.of(context);
 
@@ -183,9 +182,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       controller: controller,
       maxLines: maxLines,
       keyboardType: isPhone ? TextInputType.phone : TextInputType.text,
+      style: TextStyle(color: textColor),
       decoration: InputDecoration(
         hintText: hint,
-        prefixIcon: Icon(icon),
+        prefixIcon: Icon(icon, color: AppTheme.primaryColor),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
       ),
       validator: (val) => val!.isEmpty ? l10n.requiredField : null,
@@ -195,9 +195,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   void _submitOrder(BuildContext context) {
     if (_formKey.currentState!.validate()) {
       final cartState = context.read<CartCubit>().state;
-      
+
       String address = '';
-      
+
       if (_showNewAddressForm) {
         address = "${_buildingController.text}, ${_streetController.text}, ${_areaController.text}, ${_cityController.text}";
         if (address == ', , , ') {
@@ -215,7 +215,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         );
         return;
       }
-      
+
       context.read<CheckoutCubit>().placeOrder(
         name: _nameController.text,
         phone: _phoneController.text,
@@ -323,7 +323,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
       if (!mounted) return;
 
-      // Only prefill if user hasn't typed yet.
       if ((_nameController.text).trim().isEmpty &&
           name != null &&
           name.isNotEmpty) {
@@ -334,8 +333,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           phone.isNotEmpty) {
         _phoneController.text = phone;
       }
-    } catch (_) {
-      // If Firestore fails, just keep fields empty for manual entry.
-    }
+    } catch (_) {}
   }
 }

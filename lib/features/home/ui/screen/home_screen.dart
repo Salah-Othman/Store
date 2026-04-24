@@ -29,8 +29,10 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final isDesktop = context.isDesktop;
-    
+    final scaffoldBg = Theme.of(context).scaffoldBackgroundColor;
+
     return Scaffold(
+      backgroundColor: scaffoldBg,
       appBar: AppBar(
         title: Padding(
           padding: EdgeInsets.symmetric(horizontal: isDesktop ? 16.w : 12.w),
@@ -39,7 +41,7 @@ class _HomeScreenState extends State<HomeScreen> {
             style: Theme.of(
               context,
             ).textTheme.displayLarge?.copyWith(
-              color: AppTheme.tertiaryColor,
+              color: Theme.of(context).colorScheme.onSurface,
               fontSize: isDesktop ? 28.sp : 22.sp,
             ),
           ),
@@ -55,7 +57,7 @@ class _HomeScreenState extends State<HomeScreen> {
             SliverToBoxAdapter(
               child: Padding(
                 padding: EdgeInsets.all(isDesktop ? 16.w : AppSizes.p8),
-                child: isDesktop 
+                child: isDesktop
                     ? ConstrainedBox(
                         constraints: BoxConstraints(maxWidth: context.screenWidth * 0.8),
                         child: BannarWidget(),

@@ -35,16 +35,20 @@ class _SignUpScreenState extends State<SignUpScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final isDesktop = context.isDesktop;
+    final scaffoldBg = Theme.of(context).scaffoldBackgroundColor;
+    final surfaceColor = Theme.of(context).colorScheme.surface;
+    final textColor = Theme.of(context).colorScheme.onSurface;
+    final hintColor = Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5);
     final maxWidth = isDesktop ? 450.0 : double.infinity;
 
     return Scaffold(
-      backgroundColor: AppTheme.neutralColor,
+      backgroundColor: scaffoldBg,
       appBar: AppBar(
         title: Text(
           l10n.createAccount,
           style: GoogleFonts.notoSerif(fontWeight: FontWeight.bold),
         ),
-        backgroundColor: Colors.white,
+        backgroundColor: surfaceColor,
         elevation: 0.5,
       ),
       body: SafeArea(
@@ -76,7 +80,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         style: GoogleFonts.notoSerif(
                           fontSize: isDesktop ? 36.sp : 28.sp,
                           fontWeight: FontWeight.bold,
-                          color: AppTheme.primaryColor,
+                          color: textColor,
                         ),
                       ),
                       SizedBox(height: 12.h),
@@ -84,17 +88,17 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         l10n.signUpSubtitle,
                         style: GoogleFonts.manrope(
                           fontSize: isDesktop ? 18.sp : 15.sp,
-                          color: AppTheme.tertiaryColor,
+                          color: hintColor,
                           height: 1.5,
                         ),
                       ),
                       SizedBox(height: isDesktop ? 40.h : 28.h),
                       TextFormField(
                         controller: _nameController,
-                        style: GoogleFonts.manrope(fontSize: isDesktop ? 18.sp : 16.sp),
+                        style: GoogleFonts.manrope(fontSize: isDesktop ? 18.sp : 16.sp, color: textColor),
                         decoration: InputDecoration(
                           labelText: l10n.fullName,
-                          labelStyle: GoogleFonts.manrope(fontSize: isDesktop ? 16.sp : 14.sp),
+                          labelStyle: GoogleFonts.manrope(fontSize: isDesktop ? 16.sp : 14.sp, color: hintColor),
                           prefixIcon: Icon(Icons.person_outline, size: isDesktop ? 26.sp : 22),
                         ),
                         validator: (value) => value == null || value.trim().isEmpty
@@ -105,10 +109,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       TextFormField(
                         controller: _emailController,
                         keyboardType: TextInputType.emailAddress,
-                        style: GoogleFonts.manrope(fontSize: isDesktop ? 18.sp : 16.sp),
+                        style: GoogleFonts.manrope(fontSize: isDesktop ? 18.sp : 16.sp, color: textColor),
                         decoration: InputDecoration(
                           labelText: l10n.emailAddress,
-                          labelStyle: GoogleFonts.manrope(fontSize: isDesktop ? 16.sp : 14.sp),
+                          labelStyle: GoogleFonts.manrope(fontSize: isDesktop ? 16.sp : 14.sp, color: hintColor),
                           prefixIcon: Icon(Icons.email_outlined, size: isDesktop ? 26.sp : 22),
                         ),
                         validator: (value) => value == null || value.trim().isEmpty
@@ -119,11 +123,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       TextFormField(
                         controller: _phoneController,
                         keyboardType: TextInputType.phone,
-                        style: GoogleFonts.manrope(fontSize: isDesktop ? 18.sp : 16.sp),
+                        style: GoogleFonts.manrope(fontSize: isDesktop ? 18.sp : 16.sp, color: textColor),
                         decoration: InputDecoration(
                           labelText: l10n.phoneNumber,
                           hintText: l10n.phoneNumberHint,
-                          labelStyle: GoogleFonts.manrope(fontSize: isDesktop ? 16.sp : 14.sp),
+                          labelStyle: GoogleFonts.manrope(fontSize: isDesktop ? 16.sp : 14.sp, color: hintColor),
                           prefixIcon: Icon(Icons.phone_outlined, size: isDesktop ? 26.sp : 22),
                         ),
                         validator: (value) => value == null || value.trim().isEmpty
@@ -134,10 +138,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       TextFormField(
                         controller: _passwordController,
                         obscureText: _obscurePassword,
-                        style: GoogleFonts.manrope(fontSize: isDesktop ? 18.sp : 16.sp),
+                        style: GoogleFonts.manrope(fontSize: isDesktop ? 18.sp : 16.sp, color: textColor),
                         decoration: InputDecoration(
                           labelText: l10n.password,
-                          labelStyle: GoogleFonts.manrope(fontSize: isDesktop ? 16.sp : 14.sp),
+                          labelStyle: GoogleFonts.manrope(fontSize: isDesktop ? 16.sp : 14.sp, color: hintColor),
                           prefixIcon: Icon(Icons.lock_outline, size: isDesktop ? 26.sp : 22),
                           suffixIcon: IconButton(
                             onPressed: () {

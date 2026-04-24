@@ -24,12 +24,13 @@ class _BottomNavShellState extends State<BottomNavShell> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       body: IndexedStack(index: _currentIndex, children: _screens),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _currentIndex,
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).navigationBarTheme.backgroundColor,
         indicatorColor: AppTheme.secondaryColor.withValues(alpha: 0.18),
         labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
         onDestinationSelected: (index) {
@@ -39,17 +40,17 @@ class _BottomNavShellState extends State<BottomNavShell> {
         },
         destinations: [
           NavigationDestination(
-            icon: const Icon(Icons.home_outlined),
+            icon: Icon(Icons.home_outlined, color: isDark ? Colors.white70 : null),
             selectedIcon: const Icon(Icons.home),
             label: l10n.home,
           ),
           NavigationDestination(
-            icon: const Icon(Icons.shopping_bag_outlined),
+            icon: Icon(Icons.shopping_bag_outlined, color: isDark ? Colors.white70 : null),
             selectedIcon: const Icon(Icons.shopping_bag),
             label: l10n.cart,
           ),
           NavigationDestination(
-            icon: const Icon(Icons.person_outline),
+            icon: Icon(Icons.person_outline, color: isDark ? Colors.white70 : null),
             selectedIcon: const Icon(Icons.person),
             label: l10n.myProfile,
           ),

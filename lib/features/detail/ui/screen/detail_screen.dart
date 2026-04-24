@@ -19,9 +19,10 @@ class DetailsScreen extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final isDesktop = context.isDesktop;
     final isTablet = context.isTablet;
+    final scaffoldBg = Theme.of(context).scaffoldBackgroundColor;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: scaffoldBg,
       body: isDesktop || isTablet
           ? _buildDesktopLayout(context, l10n)
           : _buildMobileLayout(context, l10n),
@@ -78,6 +79,8 @@ class DetailsScreen extends StatelessWidget {
 
   Widget _buildProductInfo(BuildContext context, {required bool isDesktop}) {
     final l10n = AppLocalizations.of(context);
+    final textColor = Theme.of(context).colorScheme.onSurface;
+    final subtitleColor = Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -92,7 +95,7 @@ class DetailsScreen extends StatelessWidget {
                 style: GoogleFonts.notoSerif(
                   fontSize: isDesktop ? 36.sp : 28.sp,
                   fontWeight: FontWeight.bold,
-                  color: AppTheme.primaryColor,
+                  color: textColor,
                 ),
               ),
             ),
@@ -110,7 +113,7 @@ class DetailsScreen extends StatelessWidget {
         Text(
           product.category,
           style: TextStyle(
-            color: AppTheme.tertiaryColor,
+            color: subtitleColor,
             fontSize: isDesktop ? 20.sp : 16.sp,
           ),
         ),
@@ -120,6 +123,7 @@ class DetailsScreen extends StatelessWidget {
           style: GoogleFonts.manrope(
             fontSize: isDesktop ? 22.sp : 18.sp,
             fontWeight: FontWeight.bold,
+            color: textColor,
           ),
         ),
         SizedBox(height: 12.h),
@@ -127,7 +131,7 @@ class DetailsScreen extends StatelessWidget {
           product.description,
           style: GoogleFonts.manrope(
             fontSize: isDesktop ? 18.sp : 16.sp,
-            color: Colors.grey[700],
+            color: subtitleColor,
             height: 1.6,
           ),
         ),
@@ -137,11 +141,12 @@ class DetailsScreen extends StatelessWidget {
 
   Widget _buildBottomAction(BuildContext context, {required bool isDesktop}) {
     final l10n = AppLocalizations.of(context);
+    final surfaceColor = Theme.of(context).colorScheme.surface;
 
     return Container(
       padding: EdgeInsets.all(isDesktop ? 24.w : 24),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: surfaceColor,
         boxShadow: [
           BoxShadow(
             color: Colors.black12,

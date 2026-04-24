@@ -6,6 +6,9 @@ class AppTheme {
   static const Color secondaryColor = Color(0xFFC5A059);
   static const Color tertiaryColor = Color(0xFF334E68);
   static const Color neutralColor = Color(0xFFF5F7FA);
+  static const Color darkBackground = Color(0xFF0B1F33);
+  static const Color darkSurface = Color(0xFF102A43);
+  static const Color darkNeutral = Color(0xFF1A3555);
   static const Color whiteColor = Colors.white;
   static const Color error = Color(0xFFD32F2F);
   static const Color success = Color(0xFF388E3C);
@@ -13,16 +16,24 @@ class AppTheme {
   static ThemeData get lightTheme {
     return ThemeData(
       useMaterial3: true,
+      brightness: Brightness.light,
       scaffoldBackgroundColor: neutralColor,
       colorScheme: ColorScheme.fromSeed(
+        brightness: Brightness.light,
         seedColor: primaryColor,
         primary: primaryColor,
         secondary: secondaryColor,
         tertiary: tertiaryColor,
         surface: Colors.white,
+        surfaceContainerLowest: neutralColor,
       ),
-
-      // العناوين (Headline) بنوع Noto Serif
+      cardTheme: CardThemeData(
+        color: Colors.white,
+        surfaceTintColor: Colors.white,
+        elevation: 0,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      ),
+      dividerColor: Colors.grey[300],
       textTheme: TextTheme(
         displayLarge: GoogleFonts.notoSerif(
           fontSize: 32,
@@ -34,7 +45,6 @@ class AppTheme {
           fontWeight: FontWeight.w600,
           color: primaryColor,
         ),
-        // نصوص الجسم (Body) بنوع Manrope
         bodyLarge: GoogleFonts.manrope(fontSize: 16, color: tertiaryColor),
         bodyMedium: GoogleFonts.manrope(fontSize: 14, color: tertiaryColor),
         labelLarge: GoogleFonts.manrope(
@@ -43,8 +53,6 @@ class AppTheme {
           color: Colors.white,
         ),
       ),
-
-      // شكل الزراير (Primary & Outlined)
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: primaryColor,
@@ -54,7 +62,6 @@ class AppTheme {
           textStyle: GoogleFonts.manrope(fontWeight: FontWeight.bold),
         ),
       ),
-
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           foregroundColor: primaryColor,
@@ -62,8 +69,12 @@ class AppTheme {
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
       ),
-
-      // شكل الـ Search Bar والـ Input Fields
+      appBarTheme: const AppBarTheme(
+        backgroundColor: Colors.white,
+        foregroundColor: primaryColor,
+        elevation: 0.5,
+        surfaceTintColor: Colors.white,
+      ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: Colors.white,
@@ -75,16 +86,22 @@ class AppTheme {
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: Color(0xFFD1D9E0)),
         ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: primaryColor, width: 2),
+        ),
         prefixIconColor: tertiaryColor,
         hintStyle: GoogleFonts.manrope(color: Colors.grey),
+      ),
+      navigationBarTheme: NavigationBarThemeData(
+        backgroundColor: Colors.white,
+        indicatorColor: secondaryColor.withValues(alpha: 0.18),
+        surfaceTintColor: Colors.white,
       ),
     );
   }
 
   static ThemeData get darkTheme {
-    const darkSurface = Color(0xFF102A43);
-    const darkBackground = Color(0xFF0B1F33);
-
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
@@ -96,11 +113,15 @@ class AppTheme {
         secondary: secondaryColor,
         tertiary: neutralColor,
         surface: darkSurface,
+        surfaceContainerLowest: darkBackground,
       ),
-      appBarTheme: const AppBarTheme(
-        backgroundColor: darkSurface,
-        foregroundColor: whiteColor,
+      cardTheme: CardThemeData(
+        color: darkSurface,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       ),
+      dividerColor: Colors.white24,
       textTheme: TextTheme(
         displayLarge: GoogleFonts.notoSerif(
           fontSize: 32,
@@ -136,19 +157,34 @@ class AppTheme {
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
       ),
+      appBarTheme: const AppBarTheme(
+        backgroundColor: darkSurface,
+        foregroundColor: whiteColor,
+        elevation: 0,
+        surfaceTintColor: Colors.transparent,
+      ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: darkSurface,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: secondaryColor),
+          borderSide: BorderSide(color: Colors.white24),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: secondaryColor),
+          borderSide: BorderSide(color: Colors.white24),
         ),
-        prefixIconColor: secondaryColor,
-        hintStyle: GoogleFonts.manrope(color: Colors.white70),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: secondaryColor, width: 2),
+        ),
+        prefixIconColor: neutralColor,
+        hintStyle: GoogleFonts.manrope(color: Colors.white54),
+      ),
+      navigationBarTheme: NavigationBarThemeData(
+        backgroundColor: darkSurface,
+        indicatorColor: secondaryColor.withValues(alpha: 0.18),
+        surfaceTintColor: Colors.transparent,
       ),
     );
   }

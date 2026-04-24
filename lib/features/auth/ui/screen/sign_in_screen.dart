@@ -34,10 +34,13 @@ class _SignInScreenState extends State<SignInScreen> {
     final l10n = AppLocalizations.of(context);
     final isDesktop = context.isDesktop;
     final isTablet = context.isTablet;
+    final scaffoldBg = Theme.of(context).scaffoldBackgroundColor;
+    final textColor = Theme.of(context).colorScheme.onSurface;
+    final hintColor = Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5);
     final maxWidth = isDesktop ? 450.0 : (isTablet ? 500.0 : double.infinity);
 
     return Scaffold(
-      backgroundColor: AppTheme.neutralColor,
+      backgroundColor: scaffoldBg,
       body: SafeArea(
         child: BlocListener<AuthCubit, AuthState>(
           listener: (context, state) {
@@ -63,7 +66,7 @@ class _SignInScreenState extends State<SignInScreen> {
                         style: GoogleFonts.notoSerif(
                           fontSize: isDesktop ? 36.sp : 30.sp,
                           fontWeight: FontWeight.bold,
-                          color: AppTheme.primaryColor,
+                          color: textColor,
                         ),
                       ),
                       SizedBox(height: 12.h),
@@ -71,7 +74,7 @@ class _SignInScreenState extends State<SignInScreen> {
                         l10n.signInSubtitle,
                         style: GoogleFonts.manrope(
                           fontSize: isDesktop ? 18.sp : 15.sp,
-                          color: AppTheme.tertiaryColor,
+                          color: hintColor,
                           height: 1.5,
                         ),
                       ),
@@ -79,10 +82,10 @@ class _SignInScreenState extends State<SignInScreen> {
                       TextFormField(
                         controller: _emailController,
                         keyboardType: TextInputType.emailAddress,
-                        style: GoogleFonts.manrope(fontSize: isDesktop ? 18.sp : 16.sp),
+                        style: GoogleFonts.manrope(fontSize: isDesktop ? 18.sp : 16.sp, color: textColor),
                         decoration: InputDecoration(
                           labelText: l10n.emailAddress,
-                          labelStyle: GoogleFonts.manrope(fontSize: isDesktop ? 16.sp : 14.sp),
+                          labelStyle: GoogleFonts.manrope(fontSize: isDesktop ? 16.sp : 14.sp, color: hintColor),
                           prefixIcon: Icon(Icons.email_outlined, size: isDesktop ? 26.sp : 22),
                         ),
                         validator: (value) => value == null || value.trim().isEmpty
@@ -93,10 +96,10 @@ class _SignInScreenState extends State<SignInScreen> {
                       TextFormField(
                         controller: _passwordController,
                         obscureText: _obscurePassword,
-                        style: GoogleFonts.manrope(fontSize: isDesktop ? 18.sp : 16.sp),
+                        style: GoogleFonts.manrope(fontSize: isDesktop ? 18.sp : 16.sp, color: textColor),
                         decoration: InputDecoration(
                           labelText: l10n.password,
-                          labelStyle: GoogleFonts.manrope(fontSize: isDesktop ? 16.sp : 14.sp),
+                          labelStyle: GoogleFonts.manrope(fontSize: isDesktop ? 16.sp : 14.sp, color: hintColor),
                           prefixIcon: Icon(Icons.lock_outline, size: isDesktop ? 26.sp : 22),
                           suffixIcon: IconButton(
                             onPressed: () {
@@ -130,7 +133,7 @@ class _SignInScreenState extends State<SignInScreen> {
                           },
                           child: Text(
                             l10n.forgotPassword,
-                            style: GoogleFonts.manrope(fontSize: isDesktop ? 16.sp : 14.sp),
+                            style: GoogleFonts.manrope(fontSize: isDesktop ? 16.sp : 14.sp, color: AppTheme.primaryColor),
                           ),
                         ),
                       ),
@@ -180,7 +183,7 @@ class _SignInScreenState extends State<SignInScreen> {
                         children: [
                           Text(
                             l10n.dontHaveAccount,
-                            style: GoogleFonts.manrope(fontSize: isDesktop ? 16.sp : 14.sp),
+                            style: GoogleFonts.manrope(fontSize: isDesktop ? 16.sp : 14.sp, color: hintColor),
                           ),
                           TextButton(
                             onPressed: () {
@@ -196,6 +199,7 @@ class _SignInScreenState extends State<SignInScreen> {
                               style: GoogleFonts.manrope(
                                 fontSize: isDesktop ? 16.sp : 14.sp,
                                 fontWeight: FontWeight.bold,
+                                color: AppTheme.primaryColor,
                               ),
                             ),
                           ),

@@ -1,8 +1,10 @@
 import 'package:TR/core/theme/app_theme.dart';
+import 'package:TR/core/utils/responsive_helper.dart';
 import 'package:TR/features/address/ui/screen/adrress_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class SavedAddress extends StatefulWidget {
   const SavedAddress({super.key});
@@ -23,22 +25,35 @@ class _SavedAddressState extends State<SavedAddress> {
 
   @override
   Widget build(BuildContext context) {
+    final surfaceColor = Theme.of(context).colorScheme.surface;
+    final textColor = Theme.of(context).colorScheme.onSurface;
+    final subtitleColor = textColor.withValues(alpha: 0.6);
+
     return Scaffold(
       appBar: AppBar(
-        title: Text('Saved Address'),
-        centerTitle: true,
+        title: Text('Saved Address', style: TextStyle(color: textColor)),
+        backgroundColor: surfaceColor,
         actions: [
           IconButton(
             onPressed: () {
               Navigator.push(context, MaterialPageRoute(builder: (context) => AddressScreen()));
             },
-            icon: Icon(Icons.add, color: AppTheme.primaryColor, size: 26),
+            icon: Icon(Icons.add, color: AppTheme.primaryColor, size: 26.sp),
           )
         ],
       ),
       body: SafeArea(
         child: _addresses.isEmpty
-            ? Center(child: Text('No saved addresses'))
+            ? Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.location_off_outlined, size: 80.sp, color: subtitleColor),
+                    SizedBox(height: 16.h),
+                    Text('No saved addresses', style: TextStyle(color: subtitleColor, fontSize: 18.sp)),
+                  ],
+                ),
+              )
             : ListView.builder(
                 itemCount: _addresses.length,
                 itemBuilder: (context, index) {
@@ -47,9 +62,9 @@ class _SavedAddressState extends State<SavedAddress> {
                       "${addr['building']}, ${addr['street']}, ${addr['area']}, ${addr['city']}";
                   return ListTile(
                     leading: Icon(Icons.location_on, color: AppTheme.primaryColor),
-                    title: Text(fullAddress),
+                    title: Text(fullAddress, style: TextStyle(color: textColor)),
                     trailing: IconButton(
-                      icon: Icon(Icons.delete_outline, color: Colors.red),
+                      icon: Icon(Icons.delete_outline, color: AppTheme.error),
                       onPressed: () => _deleteAddress(index),
                     ),
                   );
