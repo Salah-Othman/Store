@@ -1,4 +1,6 @@
+import 'package:TR/core/errors/error_handler.dart';
 import 'package:TR/core/localization/app_localizations.dart';
+import 'package:TR/core/services/firebase_service.dart';
 import 'package:bloc/bloc.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -8,10 +10,12 @@ import 'package:meta/meta.dart';
 part 'auth_state.dart';
 
 class AuthCubit extends Cubit<AuthState> {
-  AuthCubit() : super(AuthInitial());
+  AuthCubit({FirebaseService? firebaseService})
+      : _firebaseService = firebaseService ?? FirebaseServiceImpl(FirebaseFirestore.instance),
+        super(AuthInitial());
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseService _firebaseService;
 
   Future<void> signIn({required String email, required String password}) async {
     if (email.trim().isEmpty || password.trim().isEmpty) {
@@ -28,9 +32,10 @@ class AuthCubit extends Cubit<AuthState> {
       );
       emit(AuthAuthenticated());
     } on FirebaseAuthException catch (e) {
-      emit(AuthError(_mapAuthError(e)));
-    } catch (_) {
-      emit(AuthError(_localized.authUnknownError));
+      final failure = ErrorHandler.handleException(e);
+      emit(AuthError(failure.message));
+    } catch (e) {
+      emit(AuthError(ErrorHandler.unexpectedError));
     }
   }
 
@@ -59,7 +64,7 @@ class AuthCubit extends Cubit<AuthState> {
       await credential.user?.updateDisplayName(name.trim());
 
       if (credential.user != null) {
-        await _firestore.collection('users').doc(credential.user!.uid).set({
+        await _firebaseService.addDocument('users', {
           'name': name.trim(),
           'email': email.trim(),
           'phoneNumber': phoneNumber.trim(),
@@ -71,9 +76,10 @@ class AuthCubit extends Cubit<AuthState> {
 
       emit(AuthAuthenticated());
     } on FirebaseAuthException catch (e) {
-      emit(AuthError(_mapAuthError(e)));
-    } catch (_) {
-      emit(AuthError(_localized.authUnknownError));
+      final failure = ErrorHandler.handleException(e);
+      emit(AuthError(failure.message));
+    } catch (e) {
+      emit(AuthError(ErrorHandler.unexpectedError));
     }
   }
 
@@ -89,9 +95,10 @@ class AuthCubit extends Cubit<AuthState> {
       await _auth.sendPasswordResetEmail(email: email.trim());
       emit(AuthPasswordResetEmailSent(email.trim()));
     } on FirebaseAuthException catch (e) {
-      emit(AuthError(_mapAuthError(e)));
-    } catch (_) {
-      emit(AuthError(_localized.authUnknownError));
+      final failure = ErrorHandler.handleException(e);
+      emit(AuthError(failure.message));
+    } catch (e) {
+      emit(AuthError(ErrorHandler.unexpectedError));
     }
   }
 
@@ -105,26 +112,5 @@ class AuthCubit extends Cubit<AuthState> {
     final languageCode =
         settingsBox.get('appLanguage', defaultValue: 'en') as String;
     return AppLocalizations.fromLanguageCode(languageCode);
-  }
-
-  String _mapAuthError(FirebaseAuthException exception) {
-    switch (exception.code) {
-      case 'invalid-email':
-        return _localized.invalidEmail;
-      case 'invalid-credential':
-      case 'wrong-password':
-      case 'user-not-found':
-        return _localized.invalidLoginCredentials;
-      case 'email-already-in-use':
-        return _localized.emailAlreadyInUse;
-      case 'weak-password':
-        return _localized.weakPassword;
-      case 'network-request-failed':
-        return _localized.networkRequestFailed;
-      case 'too-many-requests':
-        return _localized.tooManyRequests;
-      default:
-        return exception.message ?? _localized.authUnknownError;
-    }
   }
 }

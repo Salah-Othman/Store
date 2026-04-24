@@ -167,7 +167,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
       trailing: Switch.adaptive(
         value: value,
-        activeColor: AppTheme.secondaryColor,
+        activeTrackColor: AppTheme.secondaryColor,
         onChanged: onChanged,
       ),
     );
@@ -207,7 +207,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     await showModalBottomSheet<void>(
       context: context,
       builder: (sheetContext) {
-        final surfaceColor = Theme.of(sheetContext).colorScheme.surface;
         final textColor = Theme.of(sheetContext).colorScheme.onSurface;
 
         return SafeArea(

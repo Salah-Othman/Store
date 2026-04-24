@@ -1,26 +1,26 @@
-import 'package:TR/core/errors/firebase_failure.dart';
+import 'package:TR/core/errors/error_handler.dart';
+import 'package:TR/core/services/firebase_service.dart';
 import 'package:TR/features/home/logic/products/products_state.dart';
 import 'package:TR/features/home/model/product_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class ProductsCubit extends Cubit<ProductsState> {
-  ProductsCubit() : super(ProductsInitial());
+  ProductsCubit({FirebaseService? firebaseService})
+      : _firebaseService = firebaseService ?? FirebaseServiceImpl(FirebaseFirestore.instance),
+        super(ProductsInitial());
 
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseService _firebaseService;
 
-  /// Get All Products
   Future<void> getAllProducts() async {
     emit(ProductsLoading());
 
     try {
-      final querySnapshot = await _firestore
-          .collection('products')
-          .get()
-          .timeout(const Duration(seconds: 15)); // Timeout للحماية
+      final querySnapshot = await _firebaseService.getCollection('products');
 
       final products = querySnapshot.docs.map((doc) {
-        return ProductModel.fromFirestore(doc.data(), doc.id);
+        final data = doc.data() as Map<String, dynamic>;
+        return ProductModel.fromFirestore(data, doc.id);
       }).toList();
 
       if (products.isEmpty) {
@@ -29,42 +29,42 @@ class ProductsCubit extends Cubit<ProductsState> {
         emit(ProductsLoaded(products));
       }
     } on FirebaseException catch (e) {
-      // هنا فصلنا FirebaseException لوحده تماماً
-      final failure = FirebaseFailure.fromFirebaseException(e);
+      final failure = ErrorHandler.handleException(e);
       emit(ProductsError(failure.message));
-
-      // في الـ Production بنبعت الـ code لـ Crashlytics هنا
-      // FirebaseCrashlytics.instance.recordError(e, stack);
     } catch (e) {
-      // أي خطأ "بشري" أو Logic error تاني
-      emit(ProductsError("Unexpected error occurred."));
+      emit(ProductsError(ErrorHandler.unexpectedError));
     }
   }
 
-  /// Products by Category
   Future<void> getProductsByCategory(String categoryName) async {
     emit(ProductsLoading());
+
     try {
-      // All Products
       if (categoryName == "All") {
         return getAllProducts();
       }
 
-      final querySnapshot = await _firestore
-          .collection('products')
-          .where('category', isEqualTo: categoryName)
-          .get();
+      final querySnapshot = await _firebaseService.queryCollection(
+        'products',
+        field: 'category',
+        isEqualTo: categoryName,
+      );
 
       final products = querySnapshot.docs.map((doc) {
-        return ProductModel.fromFirestore(doc.data(), doc.id);
+        final data = doc.data() as Map<String, dynamic>;
+        return ProductModel.fromFirestore(data, doc.id);
       }).toList();
 
-      emit(ProductsLoaded(products));
+      if (products.isEmpty) {
+        emit(ProductsEmpty());
+      } else {
+        emit(ProductsLoaded(products));
+      }
     } on FirebaseException catch (e) {
-      final failure = FirebaseFailure.fromFirebaseException(e);
+      final failure = ErrorHandler.handleException(e);
       emit(ProductsError(failure.message));
     } catch (e) {
-      emit(ProductsError("Unexpected error occurred."));
+      emit(ProductsError(ErrorHandler.unexpectedError));
     }
   }
 }

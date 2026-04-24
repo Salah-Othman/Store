@@ -1,6 +1,5 @@
 import 'package:TR/core/localization/app_localizations.dart';
 import 'package:TR/core/theme/app_theme.dart';
-import 'package:TR/core/utils/responsive_helper.dart';
 import 'package:TR/features/cart/logic/cubit/cart_cubit.dart';
 import 'package:TR/features/checkout/logic/cubit/checkout_cubit.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -97,7 +96,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   children: [
                     Expanded(
                       child: DropdownButtonFormField<String>(
-                        value: _selectedAddress,
+                        initialValue: _selectedAddress,
                         hint: Text(l10n.shippingAddress, style: TextStyle(color: textColor)),
                         decoration: InputDecoration(
                           prefixIcon: Icon(Icons.location_on, color: AppTheme.primaryColor),
@@ -296,13 +295,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
   String _formatAddress(Map<String, dynamic> address) {
     return "${address['building']}, ${address['street']}, ${address['area']}, ${address['city']}";
-  }
-
-  void _onAddressSelected(String? fullAddress) {
-    setState(() {
-      _selectedAddress = fullAddress;
-      _addressController.text = fullAddress ?? '';
-    });
   }
 
   Future<void> _prefillUserData() async {

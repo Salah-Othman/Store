@@ -1,6 +1,5 @@
 part of 'order_history_cubit.dart';
 
-@immutable
 abstract class OrderHistoryState {}
 
 class OrderHistoryInitial extends OrderHistoryState {}
@@ -16,4 +15,3 @@ class OrderHistoryError extends OrderHistoryState {
   OrderHistoryError(this.message);
 }
 class OrderHistoryEmpty extends OrderHistoryState {}
-

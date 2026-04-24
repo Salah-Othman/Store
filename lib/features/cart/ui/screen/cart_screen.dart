@@ -18,7 +18,6 @@ class CartScreen extends StatelessWidget {
     final isDesktop = context.isDesktop;
     final scaffoldBg = Theme.of(context).scaffoldBackgroundColor;
     final surfaceColor = Theme.of(context).colorScheme.surface;
-    final textColor = Theme.of(context).colorScheme.onSurface;
 
     return Scaffold(
       backgroundColor: scaffoldBg,

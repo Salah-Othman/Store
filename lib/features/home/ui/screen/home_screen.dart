@@ -1,4 +1,3 @@
-import 'package:TR/core/theme/app_theme.dart';
 import 'package:TR/core/utils/app_sizes.dart';
 import 'package:TR/core/utils/app_strings.dart';
 import 'package:TR/core/utils/responsive_helper.dart';
