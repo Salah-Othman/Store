@@ -1,13 +1,11 @@
 import 'package:TR/core/localization/app_localizations.dart';
 import 'package:TR/core/theme/app_theme.dart';
-import 'package:TR/features/address/model/address_model.dart';
 import 'package:TR/features/cart/logic/cubit/cart_cubit.dart';
 import 'package:TR/features/checkout/logic/cubit/checkout_cubit.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:hive_flutter/adapters.dart';
 
 class CheckoutScreen extends StatefulWidget {
   const CheckoutScreen({super.key});
@@ -21,12 +19,19 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
   final _addressController = TextEditingController();
+  final _cityController = TextEditingController();
+  final _areaController = TextEditingController();
+  final _streetController = TextEditingController();
+  final _buildingController = TextEditingController();
   bool _didPrefillUserData = false;
+  List<Map<String, dynamic>> _savedAddresses = [];
+  String? _selectedAddress;
+  bool _showNewAddressForm = false;
 
   @override
   void initState() {
     super.initState();
-    _loadSavedAddress();
+    _loadSavedAddresses();
     _prefillUserData();
   }
 
@@ -35,6 +40,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     _nameController.dispose();
     _phoneController.dispose();
     _addressController.dispose();
+    _cityController.dispose();
+    _areaController.dispose();
+    _streetController.dispose();
+    _buildingController.dispose();
     super.dispose();
   }
 
@@ -71,12 +80,71 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   isPhone: true,
                 ),
                 const SizedBox(height: 15),
-                _buildField(
-                  _addressController,
-                  l10n.detailedAddress,
-                  Icons.location_on,
-                  maxLines: 3,
+                Text(l10n.shippingAddress,
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold, fontSize: 16)),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(
+                      child: DropdownButtonFormField<String>(
+                        value: _selectedAddress,
+                        hint: Text(l10n.shippingAddress),
+                        decoration: InputDecoration(
+                          prefixIcon: Icon(Icons.location_on),
+                          border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12)),
+                        ),
+                        items: [
+                          ..._savedAddresses.map((addr) {
+                            final fullAddr = _formatAddress(addr);
+                            return DropdownMenuItem(
+                              value: fullAddr,
+                              child: Text(fullAddr,
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 2,
+                                  
+                                  ),
+                            );
+                          }),
+                        ],
+                        onChanged: (value) {
+                          setState(() {
+                            _selectedAddress = value;
+                            _showNewAddressForm = false;
+                          });
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    IconButton(
+                      onPressed: () {
+                        setState(() {
+                          _showNewAddressForm = !_showNewAddressForm;
+                          _selectedAddress = null;
+                        });
+                      },
+                      icon: Icon(
+                        _showNewAddressForm
+                            ? Icons.keyboard_arrow_up
+                            : Icons.add_location_alt,
+                        color: AppTheme.primaryColor,
+                        size: 30,
+                      ),
+                    ),
+                  ],
                 ),
+                if (_showNewAddressForm) ...[
+                  const SizedBox(height: 15),
+                  _buildField(_cityController, l10n.city, Icons.location_city),
+                  const SizedBox(height: 12),
+                  _buildField(_areaController, l10n.areaDistrict, Icons.map),
+                  const SizedBox(height: 12),
+                  _buildField(_streetController, l10n.streetName, Icons.streetview),
+                  const SizedBox(height: 12),
+                  _buildField(
+                      _buildingController, l10n.buildingVilla, Icons.home),
+                ],
                 const SizedBox(height: 40),
                 state is CheckoutLoading
                     ? const Center(child: CircularProgressIndicator())
@@ -127,10 +195,31 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   void _submitOrder(BuildContext context) {
     if (_formKey.currentState!.validate()) {
       final cartState = context.read<CartCubit>().state;
+      
+      String address = '';
+      
+      if (_showNewAddressForm) {
+        address = "${_buildingController.text}, ${_streetController.text}, ${_areaController.text}, ${_cityController.text}";
+        if (address == ', , , ') {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(AppLocalizations.of(context).requiredField)),
+          );
+          return;
+        }
+        _saveNewAddress();
+      } else if (_selectedAddress != null) {
+        address = _selectedAddress!;
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context).requiredField)),
+        );
+        return;
+      }
+      
       context.read<CheckoutCubit>().placeOrder(
         name: _nameController.text,
         phone: _phoneController.text,
-        address: _addressController.text,
+        address: address,
         cartItems: cartState.items
             .map(
               (i) => {
@@ -144,6 +233,24 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         total: cartState.totalPrice + 25,
       );
     }
+  }
+
+  void _saveNewAddress() async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
+
+    final address = {
+      'city': _cityController.text,
+      'area': _areaController.text,
+      'street': _streetController.text,
+      'building': _buildingController.text,
+    };
+
+    try {
+      await FirebaseFirestore.instance.collection('users').doc(uid).set({
+        'addresses': FieldValue.arrayUnion([address]),
+      }, SetOptions(merge: true));
+    } catch (_) {}
   }
 
   void _showSuccessDialog(String id) {
@@ -166,18 +273,36 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     );
   }
 
-  void _loadSavedAddress() {
-    final addressBox = Hive.box('settings_box');
-    final savedData = addressBox.get('default_address');
+  void _loadSavedAddresses() async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
 
-    if (savedData != null) {
-      final address = AddressModel.fromMap(
-        Map<String, dynamic>.from(savedData),
-      );
-      final fullAddress =
-          "${address.building}, ${address.street}, ${address.area}, ${address.city}";
-      _addressController.text = fullAddress;
-    }
+    try {
+      final doc = await FirebaseFirestore.instance.collection('users').doc(uid).get();
+      final data = doc.data();
+
+      if (data != null && data['addresses'] != null) {
+        _savedAddresses = (data['addresses'] as List)
+            .map((e) => Map<String, dynamic>.from(e as Map))
+            .toList();
+
+        if (_savedAddresses.isNotEmpty && _selectedAddress == null) {
+          _selectedAddress = _formatAddress(_savedAddresses.first);
+          _addressController.text = _selectedAddress!;
+        }
+      }
+    } catch (_) {}
+  }
+
+  String _formatAddress(Map<String, dynamic> address) {
+    return "${address['building']}, ${address['street']}, ${address['area']}, ${address['city']}";
+  }
+
+  void _onAddressSelected(String? fullAddress) {
+    setState(() {
+      _selectedAddress = fullAddress;
+      _addressController.text = fullAddress ?? '';
+    });
   }
 
   Future<void> _prefillUserData() async {

@@ -1,7 +1,9 @@
 import 'package:TR/core/theme/app_theme.dart';
+import 'package:TR/features/auth/ui/screen/auth_gate.dart';
 import 'package:TR/features/onboarding/ui/onboarding_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -42,10 +44,21 @@ class _SplashScreenState extends State<SplashScreen>
 
     Future.delayed(const Duration(milliseconds: 2500), () {
       if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const OnBoardingScreen()),
-        );
+        final settingsBox = Hive.box('settings_box');
+        final seenOnboarding = settingsBox.get('seenOnboarding', defaultValue: false) as bool;
+        
+        if (seenOnboarding) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => const AuthGate()),
+          );
+        } else {
+          settingsBox.put('seenOnboarding', true);
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => const OnBoardingScreen()),
+          );
+        }
       }
     });
   }

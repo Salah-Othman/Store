@@ -1,9 +1,9 @@
 import 'package:TR/core/localization/app_localizations.dart';
 import 'package:TR/core/theme/app_theme.dart';
-import 'package:TR/features/address/model/address_model.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:hive_flutter/hive_flutter.dart';
 
 class AddressScreen extends StatefulWidget {
   const AddressScreen({super.key});
@@ -19,7 +19,8 @@ class _AddressScreenState extends State<AddressScreen> {
   final _streetController = TextEditingController();
   final _buildingController = TextEditingController();
 
-  final _addressBox = Hive.box('settings_box');
+  final _firestore = FirebaseFirestore.instance;
+  final _uid = FirebaseAuth.instance.currentUser?.uid;
 
   @override
   void initState() {
@@ -36,15 +37,24 @@ class _AddressScreenState extends State<AddressScreen> {
     super.dispose();
   }
 
-  void _loadSavedAddress() {
-    final saved = _addressBox.get('default_address');
-    if (saved != null) {
-      final address = AddressModel.fromMap(Map<String, dynamic>.from(saved));
-      _cityController.text = address.city;
-      _areaController.text = address.area;
-      _streetController.text = address.street;
-      _buildingController.text = address.building;
-    }
+  void _loadSavedAddress() async {
+    if (_uid == null) return;
+    
+    try {
+      final doc = await _firestore.collection('users').doc(_uid).get();
+      final data = doc.data();
+      
+      if (data != null && data['addresses'] != null) {
+        final addresses = data['addresses'] as List;
+        if (addresses.isNotEmpty) {
+          final address = Map<String, dynamic>.from(addresses[0] as Map);
+          _cityController.text = address['city'] ?? '';
+          _areaController.text = address['area'] ?? '';
+          _streetController.text = address['street'] ?? '';
+          _buildingController.text = address['building'] ?? '';
+        }
+      }
+    } catch (_) {}
   }
 
   @override
@@ -144,24 +154,39 @@ class _AddressScreenState extends State<AddressScreen> {
     final l10n = AppLocalizations.of(context);
 
     if (_formKey.currentState!.validate()) {
-      final address = AddressModel(
-        city: _cityController.text,
-        area: _areaController.text,
-        street: _streetController.text,
-        building: _buildingController.text,
-      );
+      if (_uid == null) return;
 
-      await _addressBox.put('default_address', address.toMap());
+      final address = {
+        'city': _cityController.text,
+        'area': _areaController.text,
+        'street': _streetController.text,
+        'building': _buildingController.text,
+      };
 
-      if (!mounted) return;
+      try {
+        await _firestore.collection('users').doc(_uid).set({
+          'addresses': FieldValue.arrayUnion([address]),
+        }, SetOptions(merge: true));
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.addressSaved),
-          backgroundColor: Colors.green,
-        ),
-      );
-      Navigator.pop(context);
+        if (!mounted) return;
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.addressSaved),
+            backgroundColor: Colors.green,
+          ),
+        );
+        Navigator.pop(context);
+      } catch (_) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.somethingWentWrong),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 }
+

@@ -1,9 +1,8 @@
 import 'package:TR/core/theme/app_theme.dart';
-import 'package:TR/features/address/model/address_model.dart';
 import 'package:TR/features/address/ui/screen/adrress_screen.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:hive_flutter/hive_flutter.dart';
 
 class SavedAddress extends StatefulWidget {
   const SavedAddress({super.key});
@@ -13,55 +12,82 @@ class SavedAddress extends StatefulWidget {
 }
 
 class _SavedAddressState extends State<SavedAddress> {
-  String? _fullAddress;
+  List<Map<String, dynamic>> _addresses = [];
+  final _firestore = FirebaseFirestore.instance;
 
   @override
   void initState() {
     super.initState();
-    _loadSavedAddress();
+    _loadAddresses();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Saved Address',
-        
-        ),
+        title: Text('Saved Address'),
         centerTitle: true,
         actions: [
-          IconButton(onPressed: (){
-            Navigator.push(context, MaterialPageRoute(builder: (context)=>AddressScreen()));
-          }, icon: Icon(Icons.add, color: AppTheme.primaryColor, size: 26,))
+          IconButton(
+            onPressed: () {
+              Navigator.push(context, MaterialPageRoute(builder: (context) => AddressScreen()));
+            },
+            icon: Icon(Icons.add, color: AppTheme.primaryColor, size: 26),
+          )
         ],
       ),
       body: SafeArea(
-        child: SizedBox(
-          height: 400.h,
-          child: ListView(
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(24),
-                child: Text(_fullAddress ?? 'No Address Add'),
+        child: _addresses.isEmpty
+            ? Center(child: Text('No saved addresses'))
+            : ListView.builder(
+                itemCount: _addresses.length,
+                itemBuilder: (context, index) {
+                  final addr = _addresses[index];
+                  final fullAddress =
+                      "${addr['building']}, ${addr['street']}, ${addr['area']}, ${addr['city']}";
+                  return ListTile(
+                    leading: Icon(Icons.location_on, color: AppTheme.primaryColor),
+                    title: Text(fullAddress),
+                    trailing: IconButton(
+                      icon: Icon(Icons.delete_outline, color: Colors.red),
+                      onPressed: () => _deleteAddress(index),
+                    ),
+                  );
+                },
               ),
-            ],
-          ),
-        ),
       ),
     );
   }
 
-  void _loadSavedAddress() {
-    final addressBox = Hive.box('settings_box');
-    final savedData = addressBox.get('default_address');
+  void _loadAddresses() async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
 
-    if (savedData == null) return;
+    try {
+      final doc = await _firestore.collection('users').doc(uid).get();
+      final data = doc.data();
 
-    final address = AddressModel.fromMap(Map<String, dynamic>.from(savedData));
-    final fullAddress =
-        "${address.building}, ${address.street}, ${address.area}, ${address.city}";
+      if (data != null && data['addresses'] != null) {
+        if (!mounted) return;
+        setState(() {
+          _addresses = (data['addresses'] as List)
+              .map((e) => Map<String, dynamic>.from(e as Map))
+              .toList();
+        });
+      }
+    } catch (_) {}
+  }
 
-    if (!mounted) return;
-    setState(() => _fullAddress = fullAddress);
+  void _deleteAddress(int index) async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
+
+    try {
+      await _firestore.collection('users').doc(uid).update({
+        'addresses': FieldValue.arrayRemove([_addresses[index]]),
+      });
+      if (!mounted) return;
+      setState(() => _addresses.removeAt(index));
+    } catch (_) {}
   }
 }

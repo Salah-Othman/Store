@@ -1,6 +1,5 @@
 import 'package:TR/core/localization/app_localizations.dart';
 import 'package:TR/core/theme/app_theme.dart';
-import 'package:TR/features/address/ui/screen/adrress_screen.dart';
 import 'package:TR/features/address/ui/screen/saved_address.dart';
 import 'package:TR/features/admin/ui/screen/admin_dashboard_screen.dart';
 import 'package:TR/features/auth/logic/cubit/auth_cubit.dart';
