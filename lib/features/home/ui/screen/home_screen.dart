@@ -1,6 +1,7 @@
 import 'package:TR/core/theme/app_theme.dart';
 import 'package:TR/core/utils/app_sizes.dart';
 import 'package:TR/core/utils/app_strings.dart';
+import 'package:TR/core/utils/responsive_helper.dart';
 import 'package:TR/core/widgets/category_item.dart';
 import 'package:TR/features/home/logic/category/category_cubit.dart';
 import 'package:TR/features/home/logic/products/products_cubit.dart';
@@ -27,15 +28,20 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDesktop = context.isDesktop;
+    
     return Scaffold(
       appBar: AppBar(
         title: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 12.w),
+          padding: EdgeInsets.symmetric(horizontal: isDesktop ? 16.w : 12.w),
           child: Text(
             AppStrings.appName,
             style: Theme.of(
               context,
-            ).textTheme.displayLarge!.copyWith(color: AppTheme.tertiaryColor),
+            ).textTheme.displayLarge?.copyWith(
+              color: AppTheme.tertiaryColor,
+              fontSize: isDesktop ? 28.sp : 22.sp,
+            ),
           ),
         ),
       ),
@@ -48,8 +54,13 @@ class _HomeScreenState extends State<HomeScreen> {
           slivers: [
             SliverToBoxAdapter(
               child: Padding(
-                padding: EdgeInsets.all(AppSizes.p8),
-                child: BannarWidget(),
+                padding: EdgeInsets.all(isDesktop ? 16.w : AppSizes.p8),
+                child: isDesktop 
+                    ? ConstrainedBox(
+                        constraints: BoxConstraints(maxWidth: context.screenWidth * 0.8),
+                        child: BannarWidget(),
+                      )
+                    : BannarWidget(),
               ),
             ),
             SliverToBoxAdapter(child: CategoryItem()),

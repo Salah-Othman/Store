@@ -1,8 +1,10 @@
 import 'package:TR/core/localization/app_localizations.dart';
 import 'package:TR/core/theme/app_theme.dart';
+import 'package:TR/core/utils/responsive_helper.dart';
 import 'package:TR/features/auth/logic/cubit/auth_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class SignUpScreen extends StatefulWidget {
@@ -32,10 +34,19 @@ class _SignUpScreenState extends State<SignUpScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final isDesktop = context.isDesktop;
+    final maxWidth = isDesktop ? 450.0 : double.infinity;
 
     return Scaffold(
       backgroundColor: AppTheme.neutralColor,
-      appBar: AppBar(title: Text(l10n.createAccount)),
+      appBar: AppBar(
+        title: Text(
+          l10n.createAccount,
+          style: GoogleFonts.notoSerif(fontWeight: FontWeight.bold),
+        ),
+        backgroundColor: Colors.white,
+        elevation: 0.5,
+      ),
       body: SafeArea(
         child: BlocListener<AuthCubit, AuthState>(
           listener: (context, state) {
@@ -49,128 +60,149 @@ class _SignUpScreenState extends State<SignUpScreen> {
               ).showSnackBar(SnackBar(content: Text(state.message)));
             }
           },
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 20),
-                  Text(
-                    l10n.createAccount,
-                    style: GoogleFonts.notoSerif(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: AppTheme.primaryColor,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    l10n.signUpSubtitle,
-                    style: GoogleFonts.manrope(
-                      fontSize: 15,
-                      color: AppTheme.tertiaryColor,
-                      height: 1.5,
-                    ),
-                  ),
-                  const SizedBox(height: 28),
-                  TextFormField(
-                    controller: _nameController,
-                    decoration: InputDecoration(
-                      labelText: l10n.fullName,
-                      prefixIcon: const Icon(Icons.person_outline),
-                    ),
-                    validator: (value) => value == null || value.trim().isEmpty
-                        ? l10n.nameRequired
-                        : null,
-                  ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _emailController,
-                    keyboardType: TextInputType.emailAddress,
-                    decoration: InputDecoration(
-                      labelText: l10n.emailAddress,
-                      prefixIcon: const Icon(Icons.email_outlined),
-                    ),
-                    validator: (value) => value == null || value.trim().isEmpty
-                        ? l10n.emailRequired
-                        : null,
-                  ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _phoneController,
-                    keyboardType: TextInputType.phone,
-                    decoration: InputDecoration(
-                      labelText: l10n.phoneNumber,
-                      hintText: l10n.phoneNumberHint,
-                      prefixIcon: const Icon(Icons.phone_outlined),
-                    ),
-                    validator: (value) => value == null || value.trim().isEmpty
-                        ? l10n.phoneRequired
-                        : null,
-                  ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _passwordController,
-                    obscureText: _obscurePassword,
-                    decoration: InputDecoration(
-                      labelText: l10n.password,
-                      prefixIcon: const Icon(Icons.lock_outline),
-                      suffixIcon: IconButton(
-                        onPressed: () {
-                          setState(() {
-                            _obscurePassword = !_obscurePassword;
-                          });
-                        },
-                        icon: Icon(
-                          _obscurePassword
-                              ? Icons.visibility_outlined
-                              : Icons.visibility_off_outlined,
+          child: Center(
+            child: SingleChildScrollView(
+              padding: EdgeInsets.all(isDesktop ? 32.w : 24.w),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(maxWidth: maxWidth),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SizedBox(height: isDesktop ? 40.h : 20.h),
+                      Text(
+                        l10n.createAccount,
+                        style: GoogleFonts.notoSerif(
+                          fontSize: isDesktop ? 36.sp : 28.sp,
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.primaryColor,
                         ),
                       ),
-                    ),
-                    validator: (value) =>
-                        value == null || value.trim().length < 6
-                        ? l10n.passwordMinLength
-                        : null,
-                  ),
-                  const SizedBox(height: 24),
-                  BlocBuilder<AuthCubit, AuthState>(
-                    builder: (context, state) {
-                      final isLoading = state is AuthLoading;
-
-                      return ElevatedButton(
-                        onPressed: isLoading
-                            ? null
-                            : () {
-                                if (_formKey.currentState!.validate()) {
-                                  context.read<AuthCubit>().signUp(
-                                    name: _nameController.text,
-                                    email: _emailController.text,
-                                    password: _passwordController.text,
-                                    phoneNumber: _phoneController.text,
-                                  );
-                                }
-                              },
-                        style: ElevatedButton.styleFrom(
-                          minimumSize: const Size(double.infinity, 56),
-                          backgroundColor: AppTheme.primaryColor,
+                      SizedBox(height: 12.h),
+                      Text(
+                        l10n.signUpSubtitle,
+                        style: GoogleFonts.manrope(
+                          fontSize: isDesktop ? 18.sp : 15.sp,
+                          color: AppTheme.tertiaryColor,
+                          height: 1.5,
                         ),
-                        child: isLoading
-                            ? const SizedBox(
-                                width: 22,
-                                height: 22,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2.5,
-                                  color: Colors.white,
-                                ),
-                              )
-                            : Text(l10n.signUp),
-                      );
-                    },
+                      ),
+                      SizedBox(height: isDesktop ? 40.h : 28.h),
+                      TextFormField(
+                        controller: _nameController,
+                        style: GoogleFonts.manrope(fontSize: isDesktop ? 18.sp : 16.sp),
+                        decoration: InputDecoration(
+                          labelText: l10n.fullName,
+                          labelStyle: GoogleFonts.manrope(fontSize: isDesktop ? 16.sp : 14.sp),
+                          prefixIcon: Icon(Icons.person_outline, size: isDesktop ? 26.sp : 22),
+                        ),
+                        validator: (value) => value == null || value.trim().isEmpty
+                            ? l10n.nameRequired
+                            : null,
+                      ),
+                      SizedBox(height: 16.h),
+                      TextFormField(
+                        controller: _emailController,
+                        keyboardType: TextInputType.emailAddress,
+                        style: GoogleFonts.manrope(fontSize: isDesktop ? 18.sp : 16.sp),
+                        decoration: InputDecoration(
+                          labelText: l10n.emailAddress,
+                          labelStyle: GoogleFonts.manrope(fontSize: isDesktop ? 16.sp : 14.sp),
+                          prefixIcon: Icon(Icons.email_outlined, size: isDesktop ? 26.sp : 22),
+                        ),
+                        validator: (value) => value == null || value.trim().isEmpty
+                            ? l10n.emailRequired
+                            : null,
+                      ),
+                      SizedBox(height: 16.h),
+                      TextFormField(
+                        controller: _phoneController,
+                        keyboardType: TextInputType.phone,
+                        style: GoogleFonts.manrope(fontSize: isDesktop ? 18.sp : 16.sp),
+                        decoration: InputDecoration(
+                          labelText: l10n.phoneNumber,
+                          hintText: l10n.phoneNumberHint,
+                          labelStyle: GoogleFonts.manrope(fontSize: isDesktop ? 16.sp : 14.sp),
+                          prefixIcon: Icon(Icons.phone_outlined, size: isDesktop ? 26.sp : 22),
+                        ),
+                        validator: (value) => value == null || value.trim().isEmpty
+                            ? l10n.phoneRequired
+                            : null,
+                      ),
+                      SizedBox(height: 16.h),
+                      TextFormField(
+                        controller: _passwordController,
+                        obscureText: _obscurePassword,
+                        style: GoogleFonts.manrope(fontSize: isDesktop ? 18.sp : 16.sp),
+                        decoration: InputDecoration(
+                          labelText: l10n.password,
+                          labelStyle: GoogleFonts.manrope(fontSize: isDesktop ? 16.sp : 14.sp),
+                          prefixIcon: Icon(Icons.lock_outline, size: isDesktop ? 26.sp : 22),
+                          suffixIcon: IconButton(
+                            onPressed: () {
+                              setState(() {
+                                _obscurePassword = !_obscurePassword;
+                              });
+                            },
+                            icon: Icon(
+                              _obscurePassword
+                                  ? Icons.visibility_outlined
+                                  : Icons.visibility_off_outlined,
+                              size: isDesktop ? 26.sp : 22,
+                            ),
+                          ),
+                        ),
+                        validator: (value) =>
+                            value == null || value.trim().length < 6
+                            ? l10n.passwordMinLength
+                            : null,
+                      ),
+                      SizedBox(height: 24.h),
+                      BlocBuilder<AuthCubit, AuthState>(
+                        builder: (context, state) {
+                          final isLoading = state is AuthLoading;
+
+                          return ElevatedButton(
+                            onPressed: isLoading
+                                ? null
+                                : () {
+                                    if (_formKey.currentState!.validate()) {
+                                      context.read<AuthCubit>().signUp(
+                                        name: _nameController.text,
+                                        email: _emailController.text,
+                                        password: _passwordController.text,
+                                        phoneNumber: _phoneController.text,
+                                      );
+                                    }
+                                  },
+                            style: ElevatedButton.styleFrom(
+                              minimumSize: Size(double.infinity, isDesktop ? 64.h : 56),
+                              backgroundColor: AppTheme.primaryColor,
+                            ),
+                            child: isLoading
+                                ? SizedBox(
+                                    width: isDesktop ? 28.sp : 22,
+                                    height: isDesktop ? 28.sp : 22,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: isDesktop ? 3 : 2.5,
+                                      color: Colors.white,
+                                    ),
+                                  )
+                                : Text(
+                                    l10n.signUp,
+                                    style: GoogleFonts.manrope(
+                                      fontSize: isDesktop ? 20.sp : 16.sp,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                          );
+                        },
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
             ),
           ),

@@ -1,10 +1,12 @@
 import 'package:TR/core/localization/app_localizations.dart';
 import 'package:TR/core/theme/app_theme.dart';
+import 'package:TR/core/utils/responsive_helper.dart';
 import 'package:TR/features/cart/logic/cubit/cart_cubit.dart';
 import 'package:TR/features/cart/model/cart_item_model.dart';
 import 'package:TR/features/checkout/ui/screen/checkout_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class CartScreen extends StatelessWidget {
@@ -13,6 +15,7 @@ class CartScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final isDesktop = context.isDesktop;
 
     return Scaffold(
       backgroundColor: AppTheme.neutralColor,
@@ -29,39 +32,72 @@ class CartScreen extends StatelessWidget {
         builder: (context, state) {
           if (state.items.isEmpty) return _buildEmptyState(context);
 
-          return Column(
-            children: [
-              Expanded(
-                child: ListView.builder(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: state.items.length,
-                  itemBuilder: (context, index) =>
-                      _CartItemTile(item: state.items[index]),
-                ),
-              ),
-              _buildCheckoutSection(context, state),
-            ],
-          );
+          if (isDesktop) {
+            return _buildDesktopLayout(context, state);
+          }
+          return _buildMobileLayout(context, state);
         },
       ),
     );
   }
 
-  Widget _buildCheckoutSection(BuildContext context, CartState state) {
+  Widget _buildDesktopLayout(BuildContext context, CartState state) {
+    final l10n = AppLocalizations.of(context);
+    return Row(
+      children: [
+        Expanded(
+          flex: 2,
+          child: ListView.builder(
+            padding: EdgeInsets.all(24.w),
+            itemCount: state.items.length,
+            itemBuilder: (context, index) =>
+                _CartItemTile(item: state.items[index], isDesktop: true),
+          ),
+        ),
+        Container(
+          width: 400.w,
+          padding: EdgeInsets.all(24.w),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10)],
+          ),
+          child: _buildCheckoutSection(context, state, isDesktop: true),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMobileLayout(BuildContext context, CartState state) {
+    return Column(
+      children: [
+        Expanded(
+          child: ListView.builder(
+            padding: EdgeInsets.all(16.w),
+            itemCount: state.items.length,
+            itemBuilder: (context, index) =>
+                _CartItemTile(item: state.items[index], isDesktop: false),
+          ),
+        ),
+        _buildCheckoutSection(context, state, isDesktop: false),
+      ],
+    );
+  }
+
+  Widget _buildCheckoutSection(BuildContext context, CartState state, {required bool isDesktop}) {
     final l10n = AppLocalizations.of(context);
 
     return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: const BoxDecoration(
+      padding: EdgeInsets.all(isDesktop ? 24.w : 24),
+      decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+        borderRadius: isDesktop ? BorderRadius.zero : BorderRadius.vertical(top: Radius.circular(30)),
         boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10)],
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _row(l10n.totalAmount, "${state.totalPrice} EGP", isTotal: true),
-          const SizedBox(height: 20),
+          _row(l10n.totalAmount, "${state.totalPrice} EGP", isTotal: true, isDesktop: isDesktop),
+          SizedBox(height: 20.h),
           ElevatedButton(
             onPressed: () => Navigator.push(
               context,
@@ -69,14 +105,14 @@ class CartScreen extends StatelessWidget {
             ),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppTheme.primaryColor,
-              minimumSize: const Size(double.infinity, 55),
+              minimumSize: Size(double.infinity, isDesktop ? 60.h : 55),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(15),
               ),
             ),
             child: Text(
               l10n.goToCheckout,
-              style: const TextStyle(color: Colors.white, fontSize: 18),
+              style: TextStyle(color: Colors.white, fontSize: isDesktop ? 20.sp : 18.sp),
             ),
           ),
         ],
@@ -84,21 +120,21 @@ class CartScreen extends StatelessWidget {
     );
   }
 
-  Widget _row(String label, String value, {bool isTotal = false}) {
+  Widget _row(String label, String value, {bool isTotal = false, required bool isDesktop}) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
           label,
           style: GoogleFonts.manrope(
-            fontSize: 16,
+            fontSize: isDesktop ? 18.sp : 16,
             fontWeight: isTotal ? FontWeight.bold : FontWeight.normal,
           ),
         ),
         Text(
           value,
           style: GoogleFonts.manrope(
-            fontSize: 20,
+            fontSize: isDesktop ? 24.sp : 20,
             fontWeight: FontWeight.w900,
             color: AppTheme.secondaryColor,
           ),
@@ -115,10 +151,10 @@ class CartScreen extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(Icons.shopping_bag_outlined, size: 80, color: Colors.grey[300]),
-          const SizedBox(height: 16),
+          SizedBox(height: 16.h),
           Text(
             l10n.yourBagIsEmpty,
-            style: const TextStyle(color: Colors.grey, fontSize: 18),
+            style: TextStyle(color: Colors.grey, fontSize: 18.sp),
           ),
         ],
       ),
@@ -128,14 +164,18 @@ class CartScreen extends StatelessWidget {
 
 class _CartItemTile extends StatelessWidget {
   final CartItem item;
+  final bool isDesktop;
 
-  const _CartItemTile({required this.item});
+  const _CartItemTile({required this.item, required this.isDesktop});
 
   @override
   Widget build(BuildContext context) {
+    final imageSize = isDesktop ? 100.0 : 70.0;
+    final padding = isDesktop ? 16.0 : 12.0;
+
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(12),
+      margin: EdgeInsets.only(bottom: 12.h),
+      padding: EdgeInsets.all(padding),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
@@ -144,27 +184,27 @@ class _CartItemTile extends StatelessWidget {
         children: [
           Image.network(
             item.product.imageUrl,
-            width: 70,
-            height: 70,
+            width: imageSize,
+            height: imageSize,
             fit: BoxFit.cover,
           ),
-          const SizedBox(width: 12),
+          SizedBox(width: 12.w),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   item.product.name,
-                  style: const TextStyle(fontWeight: FontWeight.bold),
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: isDesktop ? 18.sp : null),
                 ),
                 Text(
                   "${item.product.price} EGP",
-                  style: TextStyle(color: AppTheme.secondaryColor),
+                  style: TextStyle(color: AppTheme.secondaryColor, fontSize: isDesktop ? 16.sp : null),
                 ),
               ],
             ),
           ),
-          _QuantityControls(item: item),
+          _QuantityControls(item: item, isDesktop: isDesktop),
         ],
       ),
     );
@@ -173,24 +213,27 @@ class _CartItemTile extends StatelessWidget {
 
 class _QuantityControls extends StatelessWidget {
   final CartItem item;
+  final bool isDesktop;
 
-  const _QuantityControls({required this.item});
+  const _QuantityControls({required this.item, required this.isDesktop});
 
   @override
   Widget build(BuildContext context) {
+    final iconSize = isDesktop ? 28.0 : 24.0;
+    
     return Row(
       children: [
         IconButton(
-          icon: const Icon(Icons.remove_circle_outline),
+          icon: Icon(Icons.remove_circle_outline, size: iconSize),
           onPressed: () =>
               context.read<CartCubit>().removeFromCart(item.product),
         ),
         Text(
           "${item.quantity}",
-          style: const TextStyle(fontWeight: FontWeight.bold),
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: isDesktop ? 18.sp : null),
         ),
         IconButton(
-          icon: const Icon(Icons.add_circle_outline),
+          icon: Icon(Icons.add_circle_outline, size: iconSize),
           onPressed: () => context.read<CartCubit>().addToCart(item.product),
         ),
       ],

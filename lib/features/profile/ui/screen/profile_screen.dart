@@ -1,5 +1,6 @@
 import 'package:TR/core/localization/app_localizations.dart';
 import 'package:TR/core/theme/app_theme.dart';
+import 'package:TR/core/utils/responsive_helper.dart';
 import 'package:TR/features/address/ui/screen/saved_address.dart';
 import 'package:TR/features/admin/ui/screen/admin_dashboard_screen.dart';
 import 'package:TR/features/auth/logic/cubit/auth_cubit.dart';
@@ -9,6 +10,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/utils/app_sizes.dart';
 
@@ -18,6 +20,8 @@ class ProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final isDesktop = context.isDesktop;
+    final isTablet = context.isTablet;
 
     return Scaffold(
       backgroundColor: AppTheme.neutralColor,
@@ -34,27 +38,33 @@ class ProfileScreen extends StatelessWidget {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            const SizedBox(height: 20),
-            _buildProfileHeader(context),
-            const SizedBox(height: 30),
-            _buildMenuSection(context),
-            const SizedBox(height: 20),
+            SizedBox(height: isDesktop ? 40.h : 20.h),
+            _buildProfileHeader(context, isDesktop: isDesktop),
+            SizedBox(height: isDesktop ? 50.h : 30.h),
+            ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: isTablet ? 600 : double.infinity),
+              child: _buildMenuSection(context, isDesktop: isDesktop),
+            ),
+            SizedBox(height: 20.h),
             Text(
               l10n.version,
-              style: TextStyle(color: Colors.grey[500], fontSize: 12),
+              style: TextStyle(color: Colors.grey[500], fontSize: 12.sp),
             ),
-            const SizedBox(height: 20),
+            SizedBox(height: 20.h),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildProfileHeader(BuildContext context) {
+  Widget _buildProfileHeader(BuildContext context, {required bool isDesktop}) {
     final l10n = AppLocalizations.of(context);
     final user = FirebaseAuth.instance.currentUser;
     final displayName = user?.displayName;
     final email = user?.email;
+    final avatarSize = isDesktop ? 100.0 : 60.0;
+    final iconSize = isDesktop ? 80.0 : 60.0;
+    final badgeSize = isDesktop ? 28.0 : 18.0;
 
     return Column(
       children: [
@@ -62,26 +72,26 @@ class ProfileScreen extends StatelessWidget {
           alignment: Alignment.bottomRight,
           children: [
             CircleAvatar(
-              radius: 60,
+              radius: avatarSize,
               backgroundColor: AppTheme.primaryColor,
-              child: const Icon(Icons.person, size: 60, color: Colors.white),
+              child: Icon(Icons.person, size: iconSize, color: Colors.white),
             ),
             CircleAvatar(
-              radius: 18,
+              radius: badgeSize,
               backgroundColor: AppTheme.secondaryColor,
-              child: const Icon(
+              child: Icon(
                 Icons.verified_user,
-                size: 18,
+                size: badgeSize,
                 color: Colors.white,
               ),
             ),
           ],
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: 16.h),
         Text(
           displayName?.isNotEmpty == true ? displayName! : l10n.signedInUser,
           style: GoogleFonts.notoSerif(
-            fontSize: 22,
+            fontSize: isDesktop ? 28.sp : 22.sp,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -93,12 +103,12 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildMenuSection(BuildContext context) {
+  Widget _buildMenuSection(BuildContext context, {required bool isDesktop}) {
     final l10n = AppLocalizations.of(context);
     final currentUser = FirebaseAuth.instance.currentUser;
 
     return Container(
-      margin: EdgeInsets.symmetric(horizontal: AppSizes.p16),
+      margin: EdgeInsets.symmetric(horizontal: isDesktop ? 80.w : AppSizes.p16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
@@ -122,7 +132,7 @@ class ProfileScreen extends StatelessWidget {
                     builder: (context) => const OrderHistoryScreen(),
                   ),
                 );
-              }),
+              }, isDesktop: isDesktop),
               _divider(),
               _profileTile(
                 Icons.location_on_outlined,
@@ -135,6 +145,7 @@ class ProfileScreen extends StatelessWidget {
                     ),
                   );
                 },
+                isDesktop: isDesktop,
               ),
               if (isAdmin) ...[
                 _divider(),
@@ -149,6 +160,7 @@ class ProfileScreen extends StatelessWidget {
                       ),
                     );
                   },
+                  isDesktop: isDesktop,
                 ),
               ],
               _divider(),
@@ -159,13 +171,13 @@ class ProfileScreen extends StatelessWidget {
                     builder: (context) => const SettingsScreen(),
                   ),
                 );
-              }),
+              }, isDesktop: isDesktop),
               _divider(),
-              _profileTile(Icons.help_outline, l10n.helpCenter, () {}),
+              _profileTile(Icons.help_outline, l10n.helpCenter, () {}, isDesktop: isDesktop),
               _divider(),
               _profileTile(Icons.logout, l10n.logout, () async {
                 await context.read<AuthCubit>().signOut();
-              }, color: AppTheme.secondaryColor),
+              }, color: AppTheme.secondaryColor, isDesktop: isDesktop),
             ],
           );
         },
@@ -178,17 +190,19 @@ class ProfileScreen extends StatelessWidget {
     String title,
     VoidCallback onTap, {
     Color? color,
+    required bool isDesktop,
   }) {
     return ListTile(
-      leading: Icon(icon, color: color ?? AppTheme.primaryColor),
+      leading: Icon(icon, color: color ?? AppTheme.primaryColor, size: isDesktop ? 28.sp : null),
       title: Text(
         title,
         style: GoogleFonts.manrope(
           fontWeight: FontWeight.w600,
           color: color ?? AppTheme.primaryColor,
+          fontSize: isDesktop ? 18.sp : null,
         ),
       ),
-      trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+      trailing: Icon(Icons.arrow_forward_ios, size: isDesktop ? 20.sp : 16),
       onTap: onTap,
     );
   }

@@ -38,7 +38,7 @@ class MyApp extends StatelessWidget {
       minTextAdapt: true,
       splitScreenMode: true,
       builder: (_, child) {
-        return MultiBlocProvider( 
+        return MultiBlocProvider(
           providers: [
             BlocProvider(create: (_) => AuthCubit()),
             BlocProvider(create: (_) => CategoryCubit()),
