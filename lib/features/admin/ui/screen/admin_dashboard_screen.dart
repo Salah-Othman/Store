@@ -3,7 +3,6 @@ import 'package:TR/core/theme/app_theme.dart';
 import 'package:TR/features/home/model/category_model.dart';
 import 'package:TR/features/home/model/product_model.dart';
 import 'package:TR/features/orders_history/model/order_history_model.dart';
-import 'package:TR/core/notifications/local_notifications.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -18,38 +17,6 @@ class AdminDashboardScreen extends StatefulWidget {
 }
 
 class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
-  final Set<String> _notifiedOrderIds = <String>{};
-  DateTime? _lastNotifiedCreatedAt;
-
-  Future<void> _maybeNotifyNewOrders(List<OrderModel> orders) async {
-    // Only notify once per order id while this screen is alive.
-    final newestFirst = [...orders]..sort((a, b) => b.createdAt.compareTo(a.createdAt));
-
-    for (final order in newestFirst) {
-      if (_notifiedOrderIds.contains(order.id)) continue;
-      if (_lastNotifiedCreatedAt != null &&
-          !order.createdAt.isAfter(_lastNotifiedCreatedAt!)) {
-        // Older/equal than last notified -> skip.
-        _notifiedOrderIds.add(order.id);
-        continue;
-      }
-
-      _notifiedOrderIds.add(order.id);
-      _lastNotifiedCreatedAt = order.createdAt;
-
-      // Use a stable-ish int id from the doc id hash.
-      final notificationId = order.id.hashCode & 0x7fffffff;
-      await LocalNotifications.showNewOrder(
-        id: notificationId,
-        title: 'New Order',
-        body: '${order.customerName} • ${order.totalPrice.toStringAsFixed(2)} EGP',
-      );
-
-      // Only notify for the newest unseen order per rebuild.
-      break;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -152,13 +119,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                               (a, b) => b.createdAt.compareTo(a.createdAt),
                             );
 
-                      // In-app admin notification for new orders.
-                      WidgetsBinding.instance.addPostFrameCallback((_) {
-                        if (!mounted) return;
-                        () async {
-                          await _maybeNotifyNewOrders(orders);
-                        }();
-                      });
                       final users = userSnapshot.data?.docs ?? [];
                       final categories = (categorySnapshot.data?.docs ?? [])
                           .map(
