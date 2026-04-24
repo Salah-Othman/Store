@@ -41,13 +41,20 @@ class ProfileScreen extends StatelessWidget {
             _buildProfileHeader(context, isDesktop: isDesktop),
             SizedBox(height: isDesktop ? 50.h : 30.h),
             ConstrainedBox(
-              constraints: BoxConstraints(maxWidth: isDesktop ? 450 : (isTablet ? 600 : double.infinity)),
+              constraints: BoxConstraints(
+                maxWidth: isDesktop ? 450 : (isTablet ? 600 : double.infinity),
+              ),
               child: _buildMenuSection(context, isDesktop: isDesktop),
             ),
             SizedBox(height: 20.h),
             Text(
               l10n.version,
-              style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5), fontSize: 12.sp),
+              style: TextStyle(
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withValues(alpha: 0.5),
+                fontSize: 12.sp,
+              ),
             ),
             SizedBox(height: 20.h),
           ],
@@ -96,7 +103,11 @@ class ProfileScreen extends StatelessWidget {
         ),
         Text(
           email ?? l10n.guestSessionId('8821'),
-          style: GoogleFonts.manrope(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6)),
+          style: GoogleFonts.manrope(
+            color: Theme.of(
+              context,
+            ).colorScheme.onSurface.withValues(alpha: 0.6),
+          ),
         ),
       ],
     );
@@ -107,6 +118,7 @@ class ProfileScreen extends StatelessWidget {
     final currentUser = FirebaseAuth.instance.currentUser;
     final surfaceColor = Theme.of(context).colorScheme.surface;
     final dividerColor = Theme.of(context).dividerColor;
+    final textColor = Theme.of(context).colorScheme.onSurface;
 
     return Container(
       margin: EdgeInsets.symmetric(horizontal: isDesktop ? 80.w : AppSizes.p16),
@@ -126,18 +138,25 @@ class ProfileScreen extends StatelessWidget {
 
           return Column(
             children: [
-              _profileTile(Icons.shopping_bag_outlined, l10n.myOrders, () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const OrderHistoryScreen(),
-                  ),
-                );
-              }, isDesktop: isDesktop),
+              _profileTile(
+                Icons.shopping_bag_outlined,
+                l10n.myOrders,
+                color: textColor,
+                () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const OrderHistoryScreen(),
+                    ),
+                  );
+                },
+                isDesktop: isDesktop,
+              ),
               _divider(color: dividerColor),
               _profileTile(
                 Icons.location_on_outlined,
                 l10n.shippingAddresses,
+                color: textColor,
                 () {
                   Navigator.push(
                     context,
@@ -153,6 +172,7 @@ class ProfileScreen extends StatelessWidget {
                 _profileTile(
                   Icons.admin_panel_settings_outlined,
                   l10n.adminDashboard,
+                  color: textColor,
                   () {
                     Navigator.push(
                       context,
@@ -165,20 +185,38 @@ class ProfileScreen extends StatelessWidget {
                 ),
               ],
               _divider(color: dividerColor),
-              _profileTile(Icons.settings_outlined, l10n.settings, () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const SettingsScreen(),
-                  ),
-                );
-              }, isDesktop: isDesktop),
+              _profileTile(
+                Icons.settings_outlined,
+                l10n.settings,
+                color: textColor,
+                () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const SettingsScreen(),
+                    ),
+                  );
+                },
+                isDesktop: isDesktop,
+              ),
               _divider(color: dividerColor),
-              _profileTile(Icons.help_outline, l10n.helpCenter, () {}, isDesktop: isDesktop),
+              _profileTile(
+                Icons.help_outline,
+                l10n.helpCenter,
+                color: textColor,
+                () {},
+                isDesktop: isDesktop,
+              ),
               _divider(color: dividerColor),
-              _profileTile(Icons.logout, l10n.logout, () async {
-                await context.read<AuthCubit>().signOut();
-              }, color: AppTheme.secondaryColor, isDesktop: isDesktop),
+              _profileTile(
+                Icons.logout,
+                l10n.logout,
+                () async {
+                  await context.read<AuthCubit>().signOut();
+                },
+                color: AppTheme.secondaryColor,
+                isDesktop: isDesktop,
+              ),
             ],
           );
         },
@@ -209,5 +247,6 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _divider({Color? color}) => Divider(height: 1, indent: 50, color: color ?? Colors.grey[100]);
+  Widget _divider({Color? color}) =>
+      Divider(height: 1, indent: 50, color: color ?? Colors.grey[100]);
 }
