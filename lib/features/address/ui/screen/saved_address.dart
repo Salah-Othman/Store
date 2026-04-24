@@ -1,4 +1,6 @@
+import 'package:TR/core/theme/app_theme.dart';
 import 'package:TR/features/address/model/address_model.dart';
+import 'package:TR/features/address/ui/screen/adrress_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -22,14 +24,28 @@ class _SavedAddressState extends State<SavedAddress> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SizedBox(
-        height: 400.h,
-        child: ListView(
-          children: [
-            const Text("Saved Address"),
-            const SizedBox(height: 12),
-            Text(_fullAddress ?? '-'),
-          ],
+      appBar: AppBar(
+        title: Text('Saved Address',
+        
+        ),
+        centerTitle: true,
+        actions: [
+          IconButton(onPressed: (){
+            Navigator.push(context, MaterialPageRoute(builder: (context)=>AddressScreen()));
+          }, icon: Icon(Icons.add, color: AppTheme.primaryColor, size: 26,))
+        ],
+      ),
+      body: SafeArea(
+        child: SizedBox(
+          height: 400.h,
+          child: ListView(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(24),
+                child: Text(_fullAddress ?? 'No Address Add'),
+              ),
+            ],
+          ),
         ),
       ),
     );

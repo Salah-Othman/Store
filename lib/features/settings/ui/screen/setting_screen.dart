@@ -99,7 +99,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               () {},
             ),
             _buildDivider(),
-            _buildNavigationTile(Icons.info_outline, l10n.aboutAtelier, () {}),
+            _buildNavigationTile(Icons.info_outline, l10n.aboutTR, () {}),
           ]),
         ],
       ),

@@ -1,6 +1,7 @@
 import 'package:TR/core/localization/app_localizations.dart';
 import 'package:TR/core/theme/app_theme.dart';
 import 'package:TR/features/address/ui/screen/adrress_screen.dart';
+import 'package:TR/features/address/ui/screen/saved_address.dart';
 import 'package:TR/features/admin/ui/screen/admin_dashboard_screen.dart';
 import 'package:TR/features/auth/logic/cubit/auth_cubit.dart';
 import 'package:TR/features/orders_history/ui/screen/order_history_screen.dart';
@@ -131,7 +132,7 @@ class ProfileScreen extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => const AddressScreen(),
+                      builder: (context) => const SavedAddress(),
                     ),
                   );
                 },
