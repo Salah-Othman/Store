@@ -32,17 +32,9 @@ class DetailsScreen extends StatelessWidget {
   Widget _buildDesktopLayout(BuildContext context, AppLocalizations l10n) {
     return Row(
       children: [
-        Expanded(
-          child: SliverAppBar(
-            expandedHeight: 500,
-            pinned: true,
-            flexibleSpace: FlexibleSpaceBar(
-              background: Hero(
-                tag: product.id,
-                child: Image.network(product.imageUrl, fit: BoxFit.cover),
-              ),
-            ),
-          ),
+        SizedBox(
+          width: context.screenWidth * 0.5,
+          child: Image.network(product.imageUrl, fit: BoxFit.cover, height: double.infinity),
         ),
         Expanded(
           child: SingleChildScrollView(

@@ -42,7 +42,7 @@ class ProfileScreen extends StatelessWidget {
             _buildProfileHeader(context, isDesktop: isDesktop),
             SizedBox(height: isDesktop ? 50.h : 30.h),
             ConstrainedBox(
-              constraints: BoxConstraints(maxWidth: isTablet ? 600 : double.infinity),
+              constraints: BoxConstraints(maxWidth: isDesktop ? 450 : (isTablet ? 600 : double.infinity)),
               child: _buildMenuSection(context, isDesktop: isDesktop),
             ),
             SizedBox(height: 20.h),
