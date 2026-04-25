@@ -21,7 +21,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final currentUserId = FirebaseAuth.instance.currentUser?.uid;
-    final scaffoldBg = Theme.of(context).scaffoldBackgroundColor;
     return Scaffold(
       appBar: AppBar(
         title: Text(
