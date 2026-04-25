@@ -27,6 +27,7 @@ class CartCubit extends Cubit<CartState> {
       return;
     }
     final isDesktop = context.isDesktop;
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final theme = Theme.of(context);
     final scaffoldBg = theme.scaffoldBackgroundColor;
     final surfaceColor = theme.colorScheme.surface;
@@ -37,11 +38,12 @@ class CartCubit extends Cubit<CartState> {
 
     emit(state.copyWith(
       isDesktop: isDesktop,
+      isDarkMode: isDarkMode,
       scaffoldBg: scaffoldBg,
       surfaceColor: surfaceColor,
       textColor: textColor,
       secondaryColor: secondaryColor,
-      btnColor: btnColor,
+      btnColor: btnColor ?? secondaryColor,
     ));
   }
 
@@ -58,6 +60,7 @@ class CartCubit extends Cubit<CartState> {
             0.0, (sum, item) => sum + (item.product.price * item.quantity));
         emit(CartState(items: items, totalPrice: total).copyWith(
           isDesktop: state.isDesktop,
+          isDarkMode: state.isDarkMode,
           scaffoldBg: state.scaffoldBg,
           surfaceColor: state.surfaceColor,
           textColor: state.textColor,
@@ -68,6 +71,7 @@ class CartCubit extends Cubit<CartState> {
     } catch (e) {
       emit(CartState.initial().copyWith(
         isDesktop: state.isDesktop,
+        isDarkMode: state.isDarkMode,
         scaffoldBg: state.scaffoldBg,
         surfaceColor: state.surfaceColor,
         textColor: state.textColor,
@@ -100,6 +104,7 @@ class CartCubit extends Cubit<CartState> {
           0.0, (sum, item) => sum + (item.product.price * item.quantity));
       emit(CartState(items: items, totalPrice: total).copyWith(
         isDesktop: state.isDesktop,
+        isDarkMode: state.isDarkMode,
         scaffoldBg: state.scaffoldBg,
         surfaceColor: state.surfaceColor,
         textColor: state.textColor,
@@ -112,6 +117,7 @@ class CartCubit extends Cubit<CartState> {
           0.0, (sum, item) => sum + (item.product.price * item.quantity));
       emit(CartState(items: items, totalPrice: total).copyWith(
         isDesktop: state.isDesktop,
+        isDarkMode: state.isDarkMode,
         scaffoldBg: state.scaffoldBg,
         surfaceColor: state.surfaceColor,
         textColor: state.textColor,

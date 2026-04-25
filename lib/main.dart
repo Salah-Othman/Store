@@ -1,5 +1,6 @@
 import 'package:TR/core/localization/app_localizations.dart';
 import 'package:TR/core/theme/app_theme.dart';
+import 'package:TR/features/admin/logic/cubit/admin_cubit.dart';
 import 'package:TR/features/auth/logic/cubit/auth_cubit.dart';
 import 'package:TR/features/cart/logic/cubit/cart_cubit.dart';
 import 'package:TR/features/checkout/logic/cubit/checkout_cubit.dart';
@@ -47,16 +48,13 @@ class MyApp extends StatelessWidget {
             BlocProvider.value(value: cartCubit),
             BlocProvider(create: (_) => CheckoutCubit()),
             BlocProvider(create: (_) => OrderHistoryCubit()),
+            BlocProvider(create: (_) => AdminCubit()),
           ],
           child: ValueListenableBuilder(
-            valueListenable: settingsBox.listenable(
-              keys: ['isDarkMode', 'appLanguage'],
-            ),
+            valueListenable: settingsBox.listenable(keys: ['isDarkMode', 'appLanguage']),
             builder: (context, box, _) {
-              final isDarkMode =
-                  box.get('isDarkMode', defaultValue: false) as bool;
-              final languageCode =
-                  box.get('appLanguage', defaultValue: 'en') as String;
+              final isDarkMode = box.get('isDarkMode', defaultValue: false) as bool;
+              final languageCode = box.get('appLanguage', defaultValue: 'en') as String;
 
               return MaterialApp(
                 theme: AppTheme.lightTheme,

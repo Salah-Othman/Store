@@ -5,6 +5,7 @@ class CartState {
   final List<CartItem> items;
   final double totalPrice;
   final bool isDesktop;
+  final bool isDarkMode;
   final Color scaffoldBg;
   final Color surfaceColor;
   final Color textColor;
@@ -15,6 +16,7 @@ class CartState {
     required this.items,
     required this.totalPrice,
     this.isDesktop = false,
+    this.isDarkMode = false,
     this.scaffoldBg = Colors.white,
     this.surfaceColor = Colors.white,
     this.textColor = Colors.black,
@@ -28,6 +30,7 @@ class CartState {
     List<CartItem>? items,
     double? totalPrice,
     bool? isDesktop,
+    bool? isDarkMode,
     Color? scaffoldBg,
     Color? surfaceColor,
     Color? textColor,
@@ -38,6 +41,7 @@ class CartState {
       items: items ?? this.items,
       totalPrice: totalPrice ?? this.totalPrice,
       isDesktop: isDesktop ?? this.isDesktop,
+      isDarkMode: isDarkMode ?? this.isDarkMode,
       scaffoldBg: scaffoldBg ?? this.scaffoldBg,
       surfaceColor: surfaceColor ?? this.surfaceColor,
       textColor: textColor ?? this.textColor,

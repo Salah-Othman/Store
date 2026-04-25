@@ -71,8 +71,12 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Hive.box('settings_box').get('isDarkMode', defaultValue: false) as bool;
+    final bgColor = isDarkMode ? AppTheme.darkBackground : AppTheme.primaryColor;
+    final textColor = isDarkMode ? Colors.white : Colors.white;
+    
     return Scaffold(
-      backgroundColor: AppTheme.primaryColor,
+      backgroundColor: bgColor,
       body: Center(
         child: AnimatedBuilder(
           animation: _controller,
@@ -88,7 +92,7 @@ class _SplashScreenState extends State<SplashScreen>
                       width: 150.w,
                       height: 150.w,
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: textColor,
                         borderRadius: BorderRadius.circular(30.r),
                       ),
                       child: Image.asset('assets/images/app_logo.png')
@@ -99,7 +103,7 @@ class _SplashScreenState extends State<SplashScreen>
                       style: TextStyle(
                         fontSize: 40.sp,
                         fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                        color: textColor,
                         letterSpacing: 4,
                       ),
                     ),
