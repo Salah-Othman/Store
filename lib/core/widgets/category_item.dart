@@ -1,5 +1,4 @@
 import 'package:TR/core/theme/app_theme.dart';
-import 'package:TR/core/utils/app_sizes.dart';
 import 'package:TR/core/widgets/category_shimmer.dart';
 import 'package:TR/features/home/logic/category/category_cubit.dart';
 import 'package:TR/features/home/logic/products/products_cubit.dart';
@@ -34,7 +33,7 @@ class _CategoryItemState extends State<CategoryItem> {
 
             return ListView.builder(
               scrollDirection: Axis.horizontal,
-              padding: EdgeInsets.symmetric(horizontal: AppSizes.p16),
+              padding: EdgeInsets.symmetric(horizontal: 16.w),
               itemCount: categories.length,
               itemBuilder: (context, index) {
                 final categoryName = categories[index];

@@ -1,5 +1,4 @@
 import 'package:TR/core/theme/app_theme.dart';
-import 'package:TR/core/utils/app_sizes.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -10,7 +9,7 @@ class BannarWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.all(AppSizes.p8.w),
+      padding: EdgeInsets.all(8.w),
       child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
         stream: FirebaseFirestore.instance
             .collection('banners')

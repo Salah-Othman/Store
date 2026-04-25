@@ -1,6 +1,5 @@
 import 'package:TR/core/localization/app_localizations.dart';
 import 'package:TR/core/theme/app_theme.dart';
-import 'package:TR/core/utils/responsive_helper.dart';
 import 'package:TR/features/cart/logic/cubit/cart_cubit.dart';
 import 'package:TR/features/cart/model/cart_item_model.dart';
 import 'package:TR/features/checkout/ui/screen/checkout_screen.dart';
@@ -14,13 +13,12 @@ class CartScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    context.read<CartCubit>().initTheme(context);
     final l10n = AppLocalizations.of(context);
-    final isDesktop = context.isDesktop;
-    final scaffoldBg = Theme.of(context).scaffoldBackgroundColor;
-    final surfaceColor = Theme.of(context).colorScheme.surface;
+    final state = context.watch<CartCubit>().state;
 
     return Scaffold(
-      backgroundColor: scaffoldBg,
+      backgroundColor: state.scaffoldBg,
       appBar: AppBar(
         title: Text(
           l10n.cart,
@@ -28,13 +26,13 @@ class CartScreen extends StatelessWidget {
         ),
         centerTitle: true,
         elevation: 0,
-        backgroundColor: surfaceColor,
+        backgroundColor: state.surfaceColor,
       ),
       body: BlocBuilder<CartCubit, CartState>(
         builder: (context, state) {
           if (state.items.isEmpty) return _buildEmptyState(context);
 
-          if (isDesktop) {
+          if (state.isDesktop) {
             return _buildDesktopLayout(context, state);
           }
           return _buildMobileLayout(context, state);
@@ -59,7 +57,7 @@ class CartScreen extends StatelessWidget {
           width: 400.w,
           padding: EdgeInsets.all(24.w),
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
+            color: state.surfaceColor,
             boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10)],
           ),
           child: _buildCheckoutSection(context, state, isDesktop: true),
@@ -86,12 +84,11 @@ class CartScreen extends StatelessWidget {
 
   Widget _buildCheckoutSection(BuildContext context, CartState state, {required bool isDesktop}) {
     final l10n = AppLocalizations.of(context);
-    final surfaceColor = Theme.of(context).colorScheme.surface;
 
     return Container(
       padding: EdgeInsets.all(isDesktop ? 24.w : 24),
       decoration: BoxDecoration(
-        color: surfaceColor,
+        color: state.surfaceColor,
         borderRadius: isDesktop ? BorderRadius.zero : BorderRadius.vertical(top: Radius.circular(30)),
         boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10)],
       ),
@@ -106,7 +103,7 @@ class CartScreen extends StatelessWidget {
               MaterialPageRoute(builder: (context) => const CheckoutScreen()),
             ),
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.primaryColor,
+              backgroundColor: state.btnColor,
               minimumSize: Size(double.infinity, isDesktop ? 60.h : 55),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(15),
@@ -123,7 +120,7 @@ class CartScreen extends StatelessWidget {
   }
 
   Widget _row(BuildContext context, String label, String value, {bool isTotal = false, required bool isDesktop}) {
-    final textColor = Theme.of(context).colorScheme.onSurface;
+    final state = context.watch<CartCubit>().state;
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -133,7 +130,7 @@ class CartScreen extends StatelessWidget {
           style: GoogleFonts.manrope(
             fontSize: isDesktop ? 18.sp : 16,
             fontWeight: isTotal ? FontWeight.bold : FontWeight.normal,
-            color: textColor,
+            color: state.textColor,
           ),
         ),
         Text(
@@ -150,17 +147,17 @@ class CartScreen extends StatelessWidget {
 
   Widget _buildEmptyState(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final textColor = Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5);
+    final state = context.watch<CartCubit>().state;
 
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.shopping_bag_outlined, size: 80, color: textColor),
+          Icon(Icons.shopping_bag_outlined, size: 80, color: state.textColor.withValues(alpha: 0.5)),
           SizedBox(height: 16.h),
           Text(
             l10n.yourBagIsEmpty,
-            style: TextStyle(color: textColor, fontSize: 18.sp),
+            style: TextStyle(color: state.textColor.withValues(alpha: 0.5), fontSize: 18.sp),
           ),
         ],
       ),
@@ -176,7 +173,7 @@ class _CartItemTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final surfaceColor = Theme.of(context).colorScheme.surface;
+    final state = context.watch<CartCubit>().state;
     final imageSize = isDesktop ? 100.0 : 70.0;
     final padding = isDesktop ? 16.0 : 12.0;
 
@@ -184,7 +181,7 @@ class _CartItemTile extends StatelessWidget {
       margin: EdgeInsets.only(bottom: 12.h),
       padding: EdgeInsets.all(padding),
       decoration: BoxDecoration(
-        color: surfaceColor,
+        color: state.surfaceColor,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
@@ -229,13 +226,13 @@ class _QuantityControls extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final state = context.watch<CartCubit>().state;
     final iconSize = isDesktop ? 28.0 : 24.0;
-    final iconColor = Theme.of(context).colorScheme.primary;
 
     return Row(
       children: [
         IconButton(
-          icon: Icon(Icons.remove_circle_outline, size: iconSize, color: iconColor),
+          icon: Icon(Icons.remove_circle_outline, size: iconSize, color: state.textColor),
           onPressed: () =>
               context.read<CartCubit>().removeFromCart(item.product),
         ),
@@ -244,7 +241,7 @@ class _QuantityControls extends StatelessWidget {
           style: TextStyle(fontWeight: FontWeight.bold, fontSize: isDesktop ? 18.sp : null),
         ),
         IconButton(
-          icon: Icon(Icons.add_circle_outline, size: iconSize, color: iconColor),
+          icon: Icon(Icons.add_circle_outline, size: iconSize, color: state.textColor),
           onPressed: () => context.read<CartCubit>().addToCart(item.product),
         ),
       ],

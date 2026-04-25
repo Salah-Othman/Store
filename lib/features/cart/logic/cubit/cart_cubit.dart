@@ -1,5 +1,7 @@
+import 'package:TR/core/utils/responsive_helper.dart';
 import 'package:TR/features/cart/model/cart_item_model.dart';
 import 'package:TR/features/home/model/product_model.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
@@ -18,6 +20,27 @@ class CartCubit extends Cubit<CartState> {
     } catch (e) {
       emit(CartState.initial());
     }
+  }
+
+  void initTheme(BuildContext context) {
+    if (state.btnColor != null) return;
+    final isDesktop = context.isDesktop;
+    final theme = Theme.of(context);
+    final scaffoldBg = theme.scaffoldBackgroundColor;
+    final surfaceColor = theme.colorScheme.surface;
+    final textColor = theme.colorScheme.onSurface;
+    final secondaryColor = const Color(0xFFFF6B00);
+    final btnTheme = theme.elevatedButtonTheme;
+    final btnColor = btnTheme.style?.backgroundColor?.resolve({});
+
+    emit(state.copyWith(
+      isDesktop: isDesktop,
+      scaffoldBg: scaffoldBg,
+      surfaceColor: surfaceColor,
+      textColor: textColor,
+      secondaryColor: secondaryColor,
+      btnColor: btnColor,
+    ));
   }
 
   Future<void> loadLocalCart() async {
