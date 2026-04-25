@@ -13,24 +13,27 @@ class CheckoutCubit extends Cubit<CheckoutState> {
         super(CheckoutInitial());
 
   final FirebaseFirestore _firestore;
+  Color _surfaceColor = Colors.white;
+  Color _textColor = Colors.black;
+  Color _primaryColor = const Color(0xFF2196F3);
 
   void initTheme(BuildContext context) {
     final theme = Theme.of(context);
-    final surfaceColor = theme.colorScheme.surface;
-    final textColor = theme.colorScheme.onSurface;
-    final primaryColor = theme.colorScheme.primary;
+    _surfaceColor = theme.colorScheme.surface;
+    _textColor = theme.colorScheme.onSurface;
+    _primaryColor = theme.colorScheme.primary;
 
     if (state is CheckoutInitial) {
       emit((state as CheckoutInitial).copyWith(
-        surfaceColor: surfaceColor,
-        textColor: textColor,
-        primaryColor: primaryColor,
+        surfaceColor: _surfaceColor,
+        textColor: _textColor,
+        primaryColor: _primaryColor,
       ));
     } else {
       emit(CheckoutInitial(
-        surfaceColor: surfaceColor,
-        textColor: textColor,
-        primaryColor: primaryColor,
+        surfaceColor: _surfaceColor,
+        textColor: _textColor,
+        primaryColor: _primaryColor,
       ));
     }
   }
@@ -42,12 +45,20 @@ class CheckoutCubit extends Cubit<CheckoutState> {
     required List<Map<String, dynamic>> cartItems,
     required double total,
   }) async {
-    emit(CheckoutLoading());
+    emit(CheckoutLoading(
+      surfaceColor: _surfaceColor,
+      textColor: _textColor,
+      primaryColor: _primaryColor,
+    ));
 
     try {
       final uid = FirebaseAuth.instance.currentUser?.uid;
       if (uid == null) {
-        emit(CheckoutError('User not authenticated. Please sign in.'));
+        emit(CheckoutError('User not authenticated. Please sign in.',
+          surfaceColor: _surfaceColor,
+          textColor: _textColor,
+          primaryColor: _primaryColor,
+        ));
         return;
       }
 
@@ -62,12 +73,24 @@ class CheckoutCubit extends Cubit<CheckoutState> {
         'createdAt': FieldValue.serverTimestamp(),
       }).timeout(const Duration(seconds: 30));
 
-      emit(CheckoutSuccess('Order placed successfully'));
+      emit(CheckoutSuccess('Order placed successfully',
+        surfaceColor: _surfaceColor,
+        textColor: _textColor,
+        primaryColor: _primaryColor,
+      ));
     } on FirebaseException catch (e) {
       final failure = ErrorHandler.handleException(e);
-      emit(CheckoutError(failure.message));
+      emit(CheckoutError(failure.message,
+        surfaceColor: _surfaceColor,
+        textColor: _textColor,
+        primaryColor: _primaryColor,
+      ));
     } catch (e) {
-      emit(CheckoutError(ErrorHandler.unexpectedError));
+      emit(CheckoutError(ErrorHandler.unexpectedError,
+        surfaceColor: _surfaceColor,
+        textColor: _textColor,
+        primaryColor: _primaryColor,
+      ));
     }
   }
 }

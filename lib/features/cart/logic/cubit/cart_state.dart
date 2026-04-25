@@ -9,7 +9,7 @@ class CartState {
   final Color surfaceColor;
   final Color textColor;
   final Color secondaryColor;
-  final Color? btnColor;
+  final Color btnColor;
 
   CartState({
     required this.items,
@@ -18,8 +18,8 @@ class CartState {
     this.scaffoldBg = Colors.white,
     this.surfaceColor = Colors.white,
     this.textColor = Colors.black,
-    this.secondaryColor = Colors.orange,
-    this.btnColor,
+    this.secondaryColor = const Color(0xFFFF6B00),
+    this.btnColor = const Color(0xFFFF6B00),
   });
 
   factory CartState.initial() => CartState(items: [], totalPrice: 0.0);

@@ -23,7 +23,9 @@ class CartCubit extends Cubit<CartState> {
   }
 
   void initTheme(BuildContext context) {
-    if (state.btnColor != null) return;
+    if (state.btnColor != const Color(0xFFFF6B00) && state.btnColor != state.scaffoldBg) {
+      return;
+    }
     final isDesktop = context.isDesktop;
     final theme = Theme.of(context);
     final scaffoldBg = theme.scaffoldBackgroundColor;
@@ -54,10 +56,24 @@ class CartCubit extends Cubit<CartState> {
             .toList();
         final total = items.fold(
             0.0, (sum, item) => sum + (item.product.price * item.quantity));
-        emit(CartState(items: items, totalPrice: total));
+        emit(CartState(items: items, totalPrice: total).copyWith(
+          isDesktop: state.isDesktop,
+          scaffoldBg: state.scaffoldBg,
+          surfaceColor: state.surfaceColor,
+          textColor: state.textColor,
+          secondaryColor: state.secondaryColor,
+          btnColor: state.btnColor,
+        ));
       }
     } catch (e) {
-      emit(CartState.initial());
+      emit(CartState.initial().copyWith(
+        isDesktop: state.isDesktop,
+        scaffoldBg: state.scaffoldBg,
+        surfaceColor: state.surfaceColor,
+        textColor: state.textColor,
+        secondaryColor: state.secondaryColor,
+        btnColor: state.btnColor,
+      ));
     }
   }
 
@@ -82,12 +98,26 @@ class CartCubit extends Cubit<CartState> {
     try {
       double total = items.fold(
           0.0, (sum, item) => sum + (item.product.price * item.quantity));
-      emit(CartState(items: items, totalPrice: total));
+      emit(CartState(items: items, totalPrice: total).copyWith(
+        isDesktop: state.isDesktop,
+        scaffoldBg: state.scaffoldBg,
+        surfaceColor: state.surfaceColor,
+        textColor: state.textColor,
+        secondaryColor: state.secondaryColor,
+        btnColor: state.btnColor,
+      ));
       _saveToLocal(items);
     } catch (e) {
       final total = items.fold(
           0.0, (sum, item) => sum + (item.product.price * item.quantity));
-      emit(CartState(items: items, totalPrice: total));
+      emit(CartState(items: items, totalPrice: total).copyWith(
+        isDesktop: state.isDesktop,
+        scaffoldBg: state.scaffoldBg,
+        surfaceColor: state.surfaceColor,
+        textColor: state.textColor,
+        secondaryColor: state.secondaryColor,
+        btnColor: state.btnColor,
+      ));
     }
   }
 
@@ -133,9 +163,23 @@ class CartCubit extends Cubit<CartState> {
     try {
       _box ??= Hive.box(_cartBoxName);
       await _box!.clear();
-      emit(CartState(items: [], totalPrice: 0.0));
+      emit(CartState(items: [], totalPrice: 0.0).copyWith(
+        isDesktop: state.isDesktop,
+        scaffoldBg: state.scaffoldBg,
+        surfaceColor: state.surfaceColor,
+        textColor: state.textColor,
+        secondaryColor: state.secondaryColor,
+        btnColor: state.btnColor,
+      ));
     } catch (e) {
-      emit(CartState(items: [], totalPrice: 0.0));
+      emit(CartState(items: [], totalPrice: 0.0).copyWith(
+        isDesktop: state.isDesktop,
+        scaffoldBg: state.scaffoldBg,
+        surfaceColor: state.surfaceColor,
+        textColor: state.textColor,
+        secondaryColor: state.secondaryColor,
+        btnColor: state.btnColor,
+      ));
     }
   }
 }
