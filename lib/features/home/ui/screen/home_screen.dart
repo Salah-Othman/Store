@@ -1,5 +1,3 @@
-import 'package:TR/core/utils/app_sizes.dart';
-import 'package:TR/core/utils/app_strings.dart';
 import 'package:TR/core/utils/responsive_helper.dart';
 import 'package:TR/core/widgets/category_item.dart';
 import 'package:TR/features/home/logic/category/category_cubit.dart';
@@ -36,7 +34,7 @@ class _HomeScreenState extends State<HomeScreen> {
         title: Padding(
           padding: EdgeInsets.symmetric(horizontal: isDesktop ? 16.w : 12.w),
           child: Text(
-            AppStrings.appName,
+            "TR",
             style: Theme.of(
               context,
             ).textTheme.displayLarge?.copyWith(
@@ -55,7 +53,7 @@ class _HomeScreenState extends State<HomeScreen> {
           slivers: [
             SliverToBoxAdapter(
               child: Padding(
-                padding: EdgeInsets.all(isDesktop ? 16.w : AppSizes.p8),
+                padding: EdgeInsets.all(isDesktop ? 16.w : 8.w),
                 child: isDesktop
                     ? ConstrainedBox(
                         constraints: BoxConstraints(maxWidth: context.screenWidth * 0.8),

@@ -12,7 +12,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../../../core/utils/app_sizes.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -121,7 +120,7 @@ class ProfileScreen extends StatelessWidget {
     final textColor = Theme.of(context).colorScheme.onSurface;
 
     return Container(
-      margin: EdgeInsets.symmetric(horizontal: isDesktop ? 80.w : AppSizes.p16),
+      margin: EdgeInsets.symmetric(horizontal: isDesktop ? 80.w : 16.w),
       decoration: BoxDecoration(
         color: surfaceColor,
         borderRadius: BorderRadius.circular(20),

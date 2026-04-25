@@ -1,5 +1,6 @@
 import 'package:TR/core/widgets/product_card.dart';
 import 'package:TR/core/utils/responsive_helper.dart';
+import 'package:TR/features/detail/logic/cubit/detail_cubit.dart';
 import 'package:TR/features/detail/ui/screen/detail_screen.dart';
 import 'package:TR/features/home/logic/products/products_cubit.dart';
 import 'package:TR/features/home/logic/products/products_state.dart';
@@ -30,7 +31,17 @@ class ProductGrid extends StatelessWidget {
                 delegate: SliverChildBuilderDelegate((context, index) {
                   final product = products[index];
                   return GestureDetector(
-                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => DetailsScreen(product: product))),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (ctx) => BlocProvider(
+                            create: (_) => DetailCubit(product: product)..init(ctx),
+                            child: DetailsScreen(product: product),
+                          ),
+                        ),
+                      );
+                    },
                     child: ProductCard(product: product),
                   );
                 }, childCount: products.length),
@@ -50,7 +61,17 @@ class ProductGrid extends StatelessWidget {
               delegate: SliverChildBuilderDelegate((context, index) {
                 final product = products[index];
                 return GestureDetector(
-                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => DetailsScreen(product: product))),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (ctx) => BlocProvider(
+                          create: (_) => DetailCubit(product: product)..init(ctx),
+                          child: DetailsScreen(product: product),
+                        ),
+                      ),
+                    );
+                  },
                   child: ProductCard(product: product),
                 );
               }, childCount: products.length),
