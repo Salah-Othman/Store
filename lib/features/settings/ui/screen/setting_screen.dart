@@ -154,7 +154,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     required Color subtitleColor,
   }) {
     return ListTile(
-      leading: Icon(icon, color: AppTheme.primaryColor),
+      leading: Icon(icon, color: textColor),
       title: Text(
         title,
         style: GoogleFonts.manrope(fontWeight: FontWeight.w500, color: textColor),
@@ -167,7 +167,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
       trailing: Switch.adaptive(
         value: value,
-        activeTrackColor: AppTheme.secondaryColor,
+        activeTrackColor: AppTheme.darkNeutral,
+        activeThumbColor: AppTheme.whiteColor,
+
         onChanged: onChanged,
       ),
     );
@@ -182,7 +184,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     required Color subtitleColor,
   }) {
     return ListTile(
-      leading: Icon(icon, color: AppTheme.primaryColor),
+      leading: Icon(icon, color: textColor),
       title: Text(
         title,
         style: GoogleFonts.manrope(fontWeight: FontWeight.w500, color: textColor),
