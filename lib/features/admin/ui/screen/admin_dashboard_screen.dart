@@ -21,9 +21,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final currentUserId = FirebaseAuth.instance.currentUser?.uid;
-
+    final scaffoldBg = Theme.of(context).scaffoldBackgroundColor;
     return Scaffold(
-      backgroundColor: AppTheme.neutralColor,
       appBar: AppBar(
         title: Text(
           l10n.adminDashboard,
@@ -35,9 +34,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         stream: currentUserId == null
             ? const Stream.empty()
             : FirebaseFirestore.instance
-                .collection('users')
-                .doc(currentUserId)
-                .snapshots(),
+                  .collection('users')
+                  .doc(currentUserId)
+                  .snapshots(),
         builder: (context, currentUserSnapshot) {
           final currentUserData = currentUserSnapshot.data?.data();
           final isAdmin =
@@ -57,10 +56,14 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           }
 
           return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-            stream: FirebaseFirestore.instance.collection('products').snapshots(),
+            stream: FirebaseFirestore.instance
+                .collection('products')
+                .snapshots(),
             builder: (context, productSnapshot) {
               return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-                stream: FirebaseFirestore.instance.collection('Orders').snapshots(),
+                stream: FirebaseFirestore.instance
+                    .collection('Orders')
+                    .snapshots(),
                 builder: (context, orderSnapshot) {
                   return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
                     stream: FirebaseFirestore.instance
@@ -72,208 +75,257 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                             .collection('category')
                             .snapshots(),
                         builder: (context, categorySnapshot) {
-                          return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                          return StreamBuilder<
+                            QuerySnapshot<Map<String, dynamic>>
+                          >(
                             stream: FirebaseFirestore.instance
                                 .collection('banners')
                                 .snapshots(),
                             builder: (context, bannerSnapshot) {
-                      if (productSnapshot.connectionState ==
-                              ConnectionState.waiting ||
-                          orderSnapshot.connectionState ==
-                              ConnectionState.waiting ||
-                          userSnapshot.connectionState ==
-                              ConnectionState.waiting ||
-                          categorySnapshot.connectionState ==
-                              ConnectionState.waiting ||
-                          bannerSnapshot.connectionState ==
-                              ConnectionState.waiting) {
-                        return const Center(child: CircularProgressIndicator());
-                      }
+                              if (productSnapshot.connectionState ==
+                                      ConnectionState.waiting ||
+                                  orderSnapshot.connectionState ==
+                                      ConnectionState.waiting ||
+                                  userSnapshot.connectionState ==
+                                      ConnectionState.waiting ||
+                                  categorySnapshot.connectionState ==
+                                      ConnectionState.waiting ||
+                                  bannerSnapshot.connectionState ==
+                                      ConnectionState.waiting) {
+                                return const Center(
+                                  child: CircularProgressIndicator(),
+                                );
+                              }
 
-                      if (productSnapshot.hasError ||
-                          orderSnapshot.hasError ||
-                          userSnapshot.hasError ||
-                          categorySnapshot.hasError ||
-                          bannerSnapshot.hasError) {
-                        return Center(
-                          child: Text(l10n.adminDashboardLoadError),
-                        );
-                      }
+                              if (productSnapshot.hasError ||
+                                  orderSnapshot.hasError ||
+                                  userSnapshot.hasError ||
+                                  categorySnapshot.hasError ||
+                                  bannerSnapshot.hasError) {
+                                return Center(
+                                  child: Text(l10n.adminDashboardLoadError),
+                                );
+                              }
 
-                      final products = (productSnapshot.data?.docs ?? [])
-                          .map(
-                            (doc) =>
-                                ProductModel.fromFirestore(doc.data(), doc.id),
-                          )
-                          .toList();
-                      final orders =
-                          (orderSnapshot.data?.docs ?? [])
-                              .map(
-                                (doc) => OrderModel.fromFirestore(
-                                  doc.data(),
-                                  doc.id,
-                                ),
-                              )
-                              .toList()
-                            ..sort(
-                              (a, b) => b.createdAt.compareTo(a.createdAt),
-                            );
+                              final products =
+                                  (productSnapshot.data?.docs ?? [])
+                                      .map(
+                                        (doc) => ProductModel.fromFirestore(
+                                          doc.data(),
+                                          doc.id,
+                                        ),
+                                      )
+                                      .toList();
+                              final orders =
+                                  (orderSnapshot.data?.docs ?? [])
+                                      .map(
+                                        (doc) => OrderModel.fromFirestore(
+                                          doc.data(),
+                                          doc.id,
+                                        ),
+                                      )
+                                      .toList()
+                                    ..sort(
+                                      (a, b) =>
+                                          b.createdAt.compareTo(a.createdAt),
+                                    );
 
-                      final users = userSnapshot.data?.docs ?? [];
-                      final categories = (categorySnapshot.data?.docs ?? [])
-                          .map(
-                            (doc) =>
-                                CategoryModel.fromFirestore(doc.data(), doc.id),
-                          )
-                          .toList();
-                      final banners = bannerSnapshot.data?.docs ?? [];
+                              final users = userSnapshot.data?.docs ?? [];
+                              final categories =
+                                  (categorySnapshot.data?.docs ?? [])
+                                      .map(
+                                        (doc) => CategoryModel.fromFirestore(
+                                          doc.data(),
+                                          doc.id,
+                                        ),
+                                      )
+                                      .toList();
+                              final banners = bannerSnapshot.data?.docs ?? [];
 
-                      final totalRevenue = orders.fold<double>(
-                        0,
-                        (sum, order) => sum + order.totalPrice,
-                      );
-                      final pendingOrders = orders
-                          .where((order) => order.status == 'Pending')
-                          .length;
-                      final successOrders = orders
-                          .where((order) => order.status == 'Success')
-                          .length;
+                              final totalRevenue = orders.fold<double>(
+                                0,
+                                (sum, order) => sum + order.totalPrice,
+                              );
+                              final pendingOrders = orders
+                                  .where((order) => order.status == 'Pending')
+                                  .length;
+                              final successOrders = orders
+                                  .where((order) => order.status == 'Success')
+                                  .length;
 
-                      return ListView(
-                        padding: const EdgeInsets.all(16),
-                        children: [
-                          _MetricsGrid(
-                            metrics: [
-                              _MetricData(
-                                title: l10n.totalProducts,
-                                value: products.length.toString(),
-                                icon: Icons.inventory_2_outlined,
-                              ),
-                              _MetricData(
-                                title: l10n.totalCategories,
-                                value: categories.length.toString(),
-                                icon: Icons.category_outlined,
-                              ),
-                              _MetricData(
-                                title: l10n.totalOrders,
-                                value: orders.length.toString(),
-                                icon: Icons.receipt_long_outlined,
-                              ),
-                              _MetricData(
-                                title: l10n.totalUsers,
-                                value: users.length.toString(),
-                                icon: Icons.people_alt_outlined,
-                              ),
-                              _MetricData(
-                                title: l10n.pendingOrdersLabel,
-                                value: pendingOrders.toString(),
-                                icon: Icons.schedule_outlined,
-                              ),
-                              _MetricData(
-                                title: l10n.successOrdersLabel,
-                                value: successOrders.toString(),
-                                icon: Icons.check_circle_outline,
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 16),
-                          _RevenueCard(totalRevenue: totalRevenue),
-                          const SizedBox(height: 16),
-                          _SectionCard(
-                            title: l10n.quickActions,
-                            child: _QuickActions(
-                              onAddProduct: () =>
-                                  _showAddProductDialog(context, categories),
-                              onAddCategory: () =>
-                                  _showAddCategoryDialog(context),
-                              onAddBanner: () => _showAddBannerDialog(context),
-                            ),
-                          ),
-                          const SizedBox(height: 24),
-                          _SectionCard(
-                            title: l10n.pendingOrdersLabel,
-                            child: orders
-                                    .where((o) => o.status == 'Pending')
-                                    .isEmpty
-                                ? _EmptyState(message: l10n.noOrdersFound)
-                                : Column(
-                                    children: orders
-                                        .where((o) => o.status == 'Pending')
-                                        .take(5)
-                                        .map((order) => _OrderRow(order: order))
-                                        .toList(),
+                              return ListView(
+                                padding: const EdgeInsets.all(16),
+                                children: [
+                                  _MetricsGrid(
+                                    metrics: [
+                                      _MetricData(
+                                        title: l10n.totalProducts,
+                                        value: products.length.toString(),
+                                        icon: Icons.inventory_2_outlined,
+                                      ),
+                                      _MetricData(
+                                        title: l10n.totalCategories,
+                                        value: categories.length.toString(),
+                                        icon: Icons.category_outlined,
+                                      ),
+                                      _MetricData(
+                                        title: l10n.totalOrders,
+                                        value: orders.length.toString(),
+                                        icon: Icons.receipt_long_outlined,
+                                      ),
+                                      _MetricData(
+                                        title: l10n.totalUsers,
+                                        value: users.length.toString(),
+                                        icon: Icons.people_alt_outlined,
+                                      ),
+                                      _MetricData(
+                                        title: l10n.pendingOrdersLabel,
+                                        value: pendingOrders.toString(),
+                                        icon: Icons.schedule_outlined,
+                                      ),
+                                      _MetricData(
+                                        title: l10n.successOrdersLabel,
+                                        value: successOrders.toString(),
+                                        icon: Icons.check_circle_outline,
+                                      ),
+                                    ],
                                   ),
-                          ),
-                          const SizedBox(height: 16),
-                          _SectionCard(
-                            title: l10n.successOrdersLabel,
-                            child: orders
-                                    .where((o) => o.status == 'Success')
-                                    .isEmpty
-                                ? _EmptyState(message: l10n.noOrdersFound)
-                                : Column(
-                                    children: orders
-                                        .where((o) => o.status == 'Success')
-                                        .take(5)
-                                        .map((order) => _OrderRow(order: order))
-                                        .toList(),
+                                  const SizedBox(height: 16),
+                                  _RevenueCard(totalRevenue: totalRevenue),
+                                  const SizedBox(height: 16),
+                                  _SectionCard(
+                                    title: l10n.quickActions,
+                                    child: _QuickActions(
+                                      onAddProduct: () => _showAddProductDialog(
+                                        context,
+                                        categories,
+                                      ),
+                                      onAddCategory: () =>
+                                          _showAddCategoryDialog(context),
+                                      onAddBanner: () =>
+                                          _showAddBannerDialog(context),
+                                    ),
                                   ),
-                          ),
-                          const SizedBox(height: 16),
-                          _SectionCard(
-                            title: l10n.productCatalog,
-                            child: products.isEmpty
-                                ? _EmptyState(message: l10n.adminNoProducts)
-                                : Column(
-                                    children: products.take(6).map((product) {
-                                      return _ProductRow(product: product, allowAdminActions: true);
-                                    }).toList(),
+                                  const SizedBox(height: 24),
+                                  _SectionCard(
+                                    title: l10n.pendingOrdersLabel,
+                                    child:
+                                        orders
+                                            .where((o) => o.status == 'Pending')
+                                            .isEmpty
+                                        ? _EmptyState(
+                                            message: l10n.noOrdersFound,
+                                          )
+                                        : Column(
+                                            children: orders
+                                                .where(
+                                                  (o) => o.status == 'Pending',
+                                                )
+                                                .take(5)
+                                                .map(
+                                                  (order) =>
+                                                      _OrderRow(order: order),
+                                                )
+                                                .toList(),
+                                          ),
                                   ),
-                          ),
-                          const SizedBox(height: 16),
-                          _SectionCard(
-                            title: l10n.categoryCatalog,
-                            child: categories.isEmpty
-                                ? _EmptyState(message: l10n.adminNoCategories)
-                                : Column(
-                                    children: categories.take(6).map((
-                                      category,
-                                    ) {
-                                      return _CategoryRow(category: category, allowAdminActions: true);
-                                    }).toList(),
+                                  const SizedBox(height: 16),
+                                  _SectionCard(
+                                    title: l10n.successOrdersLabel,
+                                    child:
+                                        orders
+                                            .where((o) => o.status == 'Success')
+                                            .isEmpty
+                                        ? _EmptyState(
+                                            message: l10n.noOrdersFound,
+                                          )
+                                        : Column(
+                                            children: orders
+                                                .where(
+                                                  (o) => o.status == 'Success',
+                                                )
+                                                .take(5)
+                                                .map(
+                                                  (order) =>
+                                                      _OrderRow(order: order),
+                                                )
+                                                .toList(),
+                                          ),
                                   ),
-                          ),
-                          const SizedBox(height: 16),
-                          _SectionCard(
-                            title: l10n.banners,
-                            child: banners.isEmpty
-                                ? _EmptyState(message: l10n.noOrdersFound)
-                                : Column(
-                                    children: banners.take(6).map((doc) {
-                                      return _BannerRow(
-                                        bannerId: doc.id,
-                                        data: doc.data(),
-                                      );
-                                    }).toList(),
+                                  const SizedBox(height: 16),
+                                  _SectionCard(
+                                    title: l10n.productCatalog,
+                                    child: products.isEmpty
+                                        ? _EmptyState(
+                                            message: l10n.adminNoProducts,
+                                          )
+                                        : Column(
+                                            children: products.take(6).map((
+                                              product,
+                                            ) {
+                                              return _ProductRow(
+                                                product: product,
+                                                allowAdminActions: true,
+                                              );
+                                            }).toList(),
+                                          ),
                                   ),
-                          ),
-                          const SizedBox(height: 16),
-                          _SectionCard(
-                            title: l10n.customerAccounts,
-                            child: users.isEmpty
-                                ? _EmptyState(message: l10n.adminNoUsers)
-                                : Column(
-                                    children: users.take(8).map((doc) {
-                                      return _UserRow(
-                                        userId: doc.id,
-                                        data: doc.data(),
-                                        isCurrentUser: doc.id == currentUserId,
-                                      );
-                                    }).toList(),
+                                  const SizedBox(height: 16),
+                                  _SectionCard(
+                                    title: l10n.categoryCatalog,
+                                    child: categories.isEmpty
+                                        ? _EmptyState(
+                                            message: l10n.adminNoCategories,
+                                          )
+                                        : Column(
+                                            children: categories.take(6).map((
+                                              category,
+                                            ) {
+                                              return _CategoryRow(
+                                                category: category,
+                                                allowAdminActions: true,
+                                              );
+                                            }).toList(),
+                                          ),
                                   ),
-                          ),
-                        ],
-                      );
+                                  const SizedBox(height: 16),
+                                  _SectionCard(
+                                    title: l10n.banners,
+                                    child: banners.isEmpty
+                                        ? _EmptyState(
+                                            message: l10n.noOrdersFound,
+                                          )
+                                        : Column(
+                                            children: banners.take(6).map((
+                                              doc,
+                                            ) {
+                                              return _BannerRow(
+                                                bannerId: doc.id,
+                                                data: doc.data(),
+                                              );
+                                            }).toList(),
+                                          ),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  _SectionCard(
+                                    title: l10n.customerAccounts,
+                                    child: users.isEmpty
+                                        ? _EmptyState(
+                                            message: l10n.adminNoUsers,
+                                          )
+                                        : Column(
+                                            children: users.take(8).map((doc) {
+                                              return _UserRow(
+                                                userId: doc.id,
+                                                data: doc.data(),
+                                                isCurrentUser:
+                                                    doc.id == currentUserId,
+                                              );
+                                            }).toList(),
+                                          ),
+                                  ),
+                                ],
+                              );
                             },
                           );
                         },
@@ -542,9 +594,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 });
                 if (!dialogContext.mounted) return;
                 Navigator.pop(dialogContext);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(l10n.bannerAdded)),
-                );
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(SnackBar(content: Text(l10n.bannerAdded)));
               },
               child: Text(l10n.save),
             ),
@@ -826,7 +878,8 @@ class _OrderRow extends StatelessWidget {
                             ),
                             _DetailRow(
                               label: l10n.totalPriceLabel,
-                              value: "${order.totalPrice.toStringAsFixed(2)} EGP",
+                              value:
+                                  "${order.totalPrice.toStringAsFixed(2)} EGP",
                             ),
                             const SizedBox(height: 18),
                             Text(
@@ -839,8 +892,9 @@ class _OrderRow extends StatelessWidget {
                             ),
                             const SizedBox(height: 10),
                             ...order.items.map((item) {
-                              final itemMap =
-                                  Map<String, dynamic>.from(item as Map);
+                              final itemMap = Map<String, dynamic>.from(
+                                item as Map,
+                              );
                               return Container(
                                 margin: const EdgeInsets.only(bottom: 10),
                                 padding: const EdgeInsets.all(12),
@@ -988,17 +1042,21 @@ class _ProductRow extends StatelessWidget {
         .doc(product.id)
         .delete();
     if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(l10n.delete)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(l10n.delete)));
   }
 
   Future<void> _editProduct(BuildContext context) async {
     final l10n = AppLocalizations.of(context);
     final formKey = GlobalKey<FormState>();
     final nameController = TextEditingController(text: product.name);
-    final descriptionController = TextEditingController(text: product.description);
-    final priceController = TextEditingController(text: product.price.toString());
+    final descriptionController = TextEditingController(
+      text: product.description,
+    );
+    final priceController = TextEditingController(
+      text: product.price.toString(),
+    );
     final imageController = TextEditingController(text: product.imageUrl);
     var selectedCategory = product.category;
     var isAvailable = product.isAvailable;
@@ -1018,8 +1076,11 @@ class _ProductRow extends StatelessWidget {
                     children: [
                       TextFormField(
                         controller: nameController,
-                        decoration: InputDecoration(labelText: l10n.productName),
-                        validator: (value) => value == null || value.trim().isEmpty
+                        decoration: InputDecoration(
+                          labelText: l10n.productName,
+                        ),
+                        validator: (value) =>
+                            value == null || value.trim().isEmpty
                             ? l10n.requiredField
                             : null,
                       ),
@@ -1027,15 +1088,20 @@ class _ProductRow extends StatelessWidget {
                       TextFormField(
                         controller: descriptionController,
                         maxLines: 3,
-                        decoration: InputDecoration(labelText: l10n.description),
-                        validator: (value) => value == null || value.trim().isEmpty
+                        decoration: InputDecoration(
+                          labelText: l10n.description,
+                        ),
+                        validator: (value) =>
+                            value == null || value.trim().isEmpty
                             ? l10n.requiredField
                             : null,
                       ),
                       const SizedBox(height: 12),
                       TextFormField(
                         controller: priceController,
-                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
                         decoration: InputDecoration(labelText: l10n.price),
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
@@ -1051,15 +1117,19 @@ class _ProductRow extends StatelessWidget {
                       TextFormField(
                         controller: imageController,
                         decoration: InputDecoration(labelText: l10n.imageUrl),
-                        validator: (value) => value == null || value.trim().isEmpty
+                        validator: (value) =>
+                            value == null || value.trim().isEmpty
                             ? l10n.requiredField
                             : null,
                       ),
                       const SizedBox(height: 12),
                       TextFormField(
                         initialValue: selectedCategory,
-                        decoration: InputDecoration(labelText: l10n.categoryName),
-                        onChanged: (value) => selectedCategory = value.trim().isEmpty
+                        decoration: InputDecoration(
+                          labelText: l10n.categoryName,
+                        ),
+                        onChanged: (value) =>
+                            selectedCategory = value.trim().isEmpty
                             ? selectedCategory
                             : value.trim(),
                       ),
@@ -1097,9 +1167,9 @@ class _ProductRow extends StatelessWidget {
                         });
                     if (!dialogContext.mounted) return;
                     Navigator.pop(dialogContext);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(l10n.save)),
-                    );
+                    ScaffoldMessenger.of(
+                      context,
+                    ).showSnackBar(SnackBar(content: Text(l10n.save)));
                   },
                   child: Text(l10n.save),
                 ),
@@ -1151,7 +1221,9 @@ class _ProductRow extends StatelessWidget {
                     product.isAvailable ? l10n.available : l10n.outOfStock,
                     style: GoogleFonts.manrope(
                       fontSize: 12,
-                      color: product.isAvailable ? AppTheme.success : AppTheme.error,
+                      color: product.isAvailable
+                          ? AppTheme.success
+                          : AppTheme.error,
                     ),
                   ),
                 ],
@@ -1169,7 +1241,9 @@ class _ProductRow extends StatelessWidget {
                   product.isAvailable ? l10n.available : l10n.outOfStock,
                   style: GoogleFonts.manrope(
                     fontSize: 12,
-                    color: product.isAvailable ? AppTheme.success : AppTheme.error,
+                    color: product.isAvailable
+                        ? AppTheme.success
+                        : AppTheme.error,
                   ),
                 ),
               ],
@@ -1191,9 +1265,9 @@ class _CategoryRow extends StatelessWidget {
         .doc(category.id)
         .delete();
     if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(l10n.delete)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(l10n.delete)));
   }
 
   Future<void> _editCategory(BuildContext context) async {
@@ -1247,9 +1321,9 @@ class _CategoryRow extends StatelessWidget {
                     });
                 if (!dialogContext.mounted) return;
                 Navigator.pop(dialogContext);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(l10n.save)),
-                );
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(SnackBar(content: Text(l10n.save)));
               },
               child: Text(l10n.save),
             ),
@@ -1282,8 +1356,14 @@ class _CategoryRow extends StatelessWidget {
                 }
               },
               itemBuilder: (context) => [
-                PopupMenuItem(value: 'edit', child: Text(AppLocalizations.of(context).edit)),
-                PopupMenuItem(value: 'delete', child: Text(AppLocalizations.of(context).delete)),
+                PopupMenuItem(
+                  value: 'edit',
+                  child: Text(AppLocalizations.of(context).edit),
+                ),
+                PopupMenuItem(
+                  value: 'delete',
+                  child: Text(AppLocalizations.of(context).delete),
+                ),
               ],
               child: const Icon(Icons.more_vert),
             )
@@ -1300,17 +1380,22 @@ class _BannerRow extends StatelessWidget {
 
   Future<void> _deleteBanner(BuildContext context) async {
     final l10n = AppLocalizations.of(context);
-    await FirebaseFirestore.instance.collection('banners').doc(bannerId).delete();
+    await FirebaseFirestore.instance
+        .collection('banners')
+        .doc(bannerId)
+        .delete();
     if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(l10n.bannerDeleted)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(l10n.bannerDeleted)));
   }
 
   Future<void> _editBanner(BuildContext context) async {
     final l10n = AppLocalizations.of(context);
     final formKey = GlobalKey<FormState>();
-    final imageController = TextEditingController(text: data['imageUrl']?.toString() ?? '');
+    final imageController = TextEditingController(
+      text: data['imageUrl']?.toString() ?? '',
+    );
 
     await showDialog<void>(
       context: context,
@@ -1341,9 +1426,9 @@ class _BannerRow extends StatelessWidget {
                     .update({'imageUrl': imageController.text.trim()});
                 if (!dialogContext.mounted) return;
                 Navigator.pop(dialogContext);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(l10n.bannerUpdated)),
-                );
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(SnackBar(content: Text(l10n.bannerUpdated)));
               },
               child: Text(l10n.save),
             ),

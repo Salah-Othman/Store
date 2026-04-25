@@ -38,12 +38,13 @@ class MyApp extends StatelessWidget {
       minTextAdapt: true,
       splitScreenMode: true,
       builder: (_, child) {
+        final cartCubit = CartCubit()..init();
         return MultiBlocProvider(
           providers: [
             BlocProvider(create: (_) => AuthCubit()),
             BlocProvider(create: (_) => CategoryCubit()),
             BlocProvider(create: (_) => ProductsCubit()),
-            BlocProvider(create: (_) => CartCubit()..init()),
+            BlocProvider.value(value: cartCubit),
             BlocProvider(create: (_) => CheckoutCubit()),
             BlocProvider(create: (_) => OrderHistoryCubit()),
           ],
