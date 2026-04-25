@@ -50,14 +50,15 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
   @override
   Widget build(BuildContext context) {
+    context.read<CheckoutCubit>().initTheme(context);
     final l10n = AppLocalizations.of(context);
-    final surfaceColor = Theme.of(context).colorScheme.surface;
-    final textColor = Theme.of(context).colorScheme.onSurface;
+    final state = context.watch<CheckoutCubit>().state;
+    final activeState = state is CheckoutInitial ? state : CheckoutInitial();
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(l10n.checkout, style: TextStyle(color: textColor)),
-        backgroundColor: surfaceColor,
+        title: Text(l10n.checkout, style: TextStyle(color: activeState.textColor)),
+        backgroundColor: activeState.surfaceColor,
       ),
       body: BlocConsumer<CheckoutCubit, CheckoutState>(
         listener: (context, state) {
@@ -77,29 +78,30 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             child: ListView(
               padding: EdgeInsets.all(20.w),
               children: [
-                _buildField(_nameController, l10n.fullName, Icons.person, textColor: textColor),
+                _buildField(_nameController, l10n.fullName, Icons.person, textColor: activeState.textColor),
                 SizedBox(height: 15.h),
                 _buildField(
                   _phoneController,
                   l10n.phoneNumber,
                   Icons.phone,
                   isPhone: true,
-                  textColor: textColor,
+                  textColor: activeState.textColor,
                 ),
                 SizedBox(height: 15.h),
                 Text(
                   l10n.shippingAddress,
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16.sp, color: textColor),
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16.sp, color: activeState.textColor),
                 ),
                 SizedBox(height: 8.h),
                 Row(
                   children: [
                     Expanded(
                       child: DropdownButtonFormField<String>(
+                        isExpanded: true,
                         initialValue: _selectedAddress,
-                        hint: Text(l10n.shippingAddress, style: TextStyle(color: textColor)),
+                        hint: Text(l10n.shippingAddress, style: TextStyle(color: activeState.textColor)),
                         decoration: InputDecoration(
-                          prefixIcon: Icon(Icons.location_on, color: AppTheme.primaryColor),
+                          prefixIcon: Icon(Icons.location_on, color: activeState.textColor),
                           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                         ),
                         items: [
@@ -129,7 +131,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       },
                       icon: Icon(
                         _showNewAddressForm ? Icons.keyboard_arrow_up : Icons.add_location_alt,
-                        color: AppTheme.primaryColor,
+                        color: activeState.textColor,
                         size: 30.sp,
                       ),
                     ),
@@ -137,13 +139,13 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 ),
                 if (_showNewAddressForm) ...[
                   SizedBox(height: 15.h),
-                  _buildField(_cityController, l10n.city, Icons.location_city, textColor: textColor),
+                  _buildField(_cityController, l10n.city, Icons.location_city, textColor: activeState.textColor),
                   SizedBox(height: 12.h),
-                  _buildField(_areaController, l10n.areaDistrict, Icons.map, textColor: textColor),
+                  _buildField(_areaController, l10n.areaDistrict, Icons.map, textColor: activeState.textColor),
                   SizedBox(height: 12.h),
-                  _buildField(_streetController, l10n.streetName, Icons.streetview, textColor: textColor),
+                  _buildField(_streetController, l10n.streetName, Icons.streetview, textColor: activeState.textColor),
                   SizedBox(height: 12.h),
-                  _buildField(_buildingController, l10n.buildingVilla, Icons.home, textColor: textColor),
+                  _buildField(_buildingController, l10n.buildingVilla, Icons.home, textColor: activeState.textColor),
                 ],
                 SizedBox(height: 40.h),
                 state is CheckoutLoading
@@ -184,7 +186,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       style: TextStyle(color: textColor),
       decoration: InputDecoration(
         hintText: hint,
-        prefixIcon: Icon(icon, color: AppTheme.primaryColor),
+        prefixIcon: Icon(icon, color: textColor),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
       ),
       validator: (val) => val!.isEmpty ? l10n.requiredField : null,

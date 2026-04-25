@@ -3,6 +3,7 @@ import 'package:TR/core/services/firebase_service.dart';
 import 'package:bloc/bloc.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 
 part 'checkout_state.dart';
 
@@ -12,6 +13,27 @@ class CheckoutCubit extends Cubit<CheckoutState> {
         super(CheckoutInitial());
 
   final FirebaseFirestore _firestore;
+
+  void initTheme(BuildContext context) {
+    final theme = Theme.of(context);
+    final surfaceColor = theme.colorScheme.surface;
+    final textColor = theme.colorScheme.onSurface;
+    final primaryColor = theme.colorScheme.primary;
+
+    if (state is CheckoutInitial) {
+      emit((state as CheckoutInitial).copyWith(
+        surfaceColor: surfaceColor,
+        textColor: textColor,
+        primaryColor: primaryColor,
+      ));
+    } else {
+      emit(CheckoutInitial(
+        surfaceColor: surfaceColor,
+        textColor: textColor,
+        primaryColor: primaryColor,
+      ));
+    }
+  }
 
   Future<void> placeOrder({
     required String name,
