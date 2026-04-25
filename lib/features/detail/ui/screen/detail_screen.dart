@@ -64,7 +64,7 @@ class DetailsScreen extends StatelessWidget {
           flexibleSpace: FlexibleSpaceBar(
             background: Hero(
               tag: product.id,
-              child: Image.network(product.imageUrl, fit: BoxFit.cover),
+              child: Image.network(product.imageUrl),
             ),
           ),
         ),

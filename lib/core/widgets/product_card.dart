@@ -35,14 +35,13 @@ class ProductCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Expanded(
+            /// Product Image
             child: ClipRRect(
               borderRadius: const BorderRadius.vertical(
                 top: Radius.circular(15),
               ),
               child: Image.network(
                 product.imageUrl,
-                
-                
               ),
             ),
           ),
@@ -51,6 +50,7 @@ class ProductCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                /// Product Name
                 Text(
                   product.name,
                   maxLines: isDesktop ? 2 : 1,
@@ -61,6 +61,7 @@ class ProductCard extends StatelessWidget {
                   ),
                 ),
                 SizedBox(height: isDesktop ? 8.h : 5.h),
+                /// Product Price & Btn
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
