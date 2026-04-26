@@ -133,7 +133,7 @@ class AuthCubit extends Cubit<AuthState> {
     emit(AuthInitial());
   }
 
-  AppLocalizations get _localized {
+  AppLocalizations get localized {
     final settingsBox = Hive.box('settings_box');
     final languageCode =
         settingsBox.get('appLanguage', defaultValue: 'en') as String;
