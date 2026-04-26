@@ -4,10 +4,12 @@ import 'package:TR/core/utils/responsive_helper.dart';
 import 'package:TR/features/cart/ui/screen/cart_screen.dart';
 import 'package:TR/features/detail/logic/cubit/detail_cubit.dart';
 import 'package:TR/features/home/model/product_model.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shimmer/shimmer.dart';
 
 class DetailsScreen extends StatelessWidget {
   final ProductModel product;
@@ -33,10 +35,19 @@ class DetailsScreen extends StatelessWidget {
       children: [
         SizedBox(
           width: context.screenWidth * 0.3,
-          child: Image.network(
-            product.imageUrl,
+          child: CachedNetworkImage(
+            imageUrl: product.imageUrl,
             fit: BoxFit.cover,
             height: double.infinity,
+            placeholder: (context, url) => Shimmer.fromColors(
+              baseColor: Colors.grey[300]!,
+              highlightColor: Colors.grey[100]!,
+              child: Container(color: Colors.white),
+            ),
+            errorWidget: (context, url, error) => Container(
+              color: Colors.grey[200],
+              child: const Icon(Icons.image_not_supported, color: Colors.grey),
+            ),
           ),
         ),
         Expanded(
@@ -64,7 +75,20 @@ class DetailsScreen extends StatelessWidget {
           flexibleSpace: FlexibleSpaceBar(
             background: Hero(
               tag: product.id,
-              child: Image.network(product.imageUrl),
+              child: CachedNetworkImage(
+                imageUrl: product.imageUrl,
+                fit: BoxFit.cover,
+                width: double.infinity,
+                placeholder: (context, url) => Shimmer.fromColors(
+                  baseColor: Colors.grey[300]!,
+                  highlightColor: Colors.grey[100]!,
+                  child: Container(color: Colors.white),
+                ),
+                errorWidget: (context, url, error) => Container(
+                  color: Colors.grey[200],
+                  child: const Icon(Icons.image_not_supported, color: Colors.grey, size: 60),
+                ),
+              ),
             ),
           ),
         ),

@@ -1,11 +1,13 @@
 import 'package:TR/core/errors/error_handler.dart';
 import 'package:TR/core/localization/app_localizations.dart';
 import 'package:TR/core/services/firebase_service.dart';
-import 'package:bloc/bloc.dart';
+import 'package:TR/core/utils/form_validator.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:hive_flutter/adapters.dart';
 import 'package:meta/meta.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+
 
 part 'auth_state.dart';
 
@@ -18,8 +20,15 @@ class AuthCubit extends Cubit<AuthState> {
   final FirebaseService _firebaseService;
 
   Future<void> signIn({required String email, required String password}) async {
-    if (email.trim().isEmpty || password.trim().isEmpty) {
-      emit(AuthError(_localized.fillAllRequiredFields));
+    final emailError = FormValidator.validateEmail(email);
+    if (emailError != null) {
+      emit(AuthError(emailError));
+      return;
+    }
+
+    final passwordError = FormValidator.validatePassword(password);
+    if (passwordError != null) {
+      emit(AuthError(passwordError));
       return;
     }
 
@@ -45,11 +54,27 @@ class AuthCubit extends Cubit<AuthState> {
     required String password,
     required String phoneNumber,
   }) async {
-    if (name.trim().isEmpty ||
-        email.trim().isEmpty ||
-        password.trim().isEmpty ||
-        phoneNumber.trim().isEmpty) {
-      emit(AuthError(_localized.fillAllRequiredFields));
+    final nameError = FormValidator.validateName(name);
+    if (nameError != null) {
+      emit(AuthError(nameError));
+      return;
+    }
+
+    final emailError = FormValidator.validateEmail(email);
+    if (emailError != null) {
+      emit(AuthError(emailError));
+      return;
+    }
+
+    final passwordError = FormValidator.validatePassword(password);
+    if (passwordError != null) {
+      emit(AuthError(passwordError));
+      return;
+    }
+
+    final phoneError = FormValidator.validatePhone(phoneNumber);
+    if (phoneError != null) {
+      emit(AuthError(phoneError));
       return;
     }
 
@@ -84,8 +109,9 @@ class AuthCubit extends Cubit<AuthState> {
   }
 
   Future<void> sendPasswordResetEmail(String email) async {
-    if (email.trim().isEmpty) {
-      emit(AuthError(_localized.emailRequired));
+    final emailError = FormValidator.validateEmail(email);
+    if (emailError != null) {
+      emit(AuthError(emailError));
       return;
     }
 

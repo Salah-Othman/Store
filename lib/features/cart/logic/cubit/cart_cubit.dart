@@ -1,3 +1,4 @@
+import 'package:TR/core/theme/app_theme.dart';
 import 'package:TR/core/utils/responsive_helper.dart';
 import 'package:TR/features/cart/model/cart_item_model.dart';
 import 'package:TR/features/home/model/product_model.dart';
@@ -11,19 +12,21 @@ class CartCubit extends Cubit<CartState> {
   CartCubit() : super(CartState.initial());
 
   final String _cartBoxName = 'cart_box';
-  Box? _box;
+  Box<dynamic>? _box;
 
   Future<void> init() async {
     try {
       _box = await Hive.openBox(_cartBoxName);
       await loadLocalCart();
-    } catch (e) {
+    } catch (e, stackTrace) {
+      debugPrint('CartCubit.init error: $e\n$stackTrace');
       emit(CartState.initial());
     }
   }
 
   void initTheme(BuildContext context) {
-    if (state.btnColor != const Color(0xFFFF6B00) && state.btnColor != state.scaffoldBg) {
+    final currentSecondary = state.secondaryColor;
+    if (currentSecondary != AppTheme.secondaryColor) {
       return;
     }
     final isDesktop = context.isDesktop;
@@ -32,7 +35,6 @@ class CartCubit extends Cubit<CartState> {
     final scaffoldBg = theme.scaffoldBackgroundColor;
     final surfaceColor = theme.colorScheme.surface;
     final textColor = theme.colorScheme.onSurface;
-    final secondaryColor = const Color(0xFFFF6B00);
     final btnTheme = theme.elevatedButtonTheme;
     final btnColor = btnTheme.style?.backgroundColor?.resolve({});
 
@@ -42,21 +44,21 @@ class CartCubit extends Cubit<CartState> {
       scaffoldBg: scaffoldBg,
       surfaceColor: surfaceColor,
       textColor: textColor,
-      secondaryColor: secondaryColor,
-      btnColor: btnColor ?? secondaryColor,
+      secondaryColor: AppTheme.secondaryColor,
+      btnColor: btnColor ?? AppTheme.secondaryColor,
     ));
   }
 
   Future<void> loadLocalCart() async {
     try {
-      _box ??= Hive.box(_cartBoxName);
-      final List? savedItems = _box!.get('items');
+      _box ??= await Hive.openBox(_cartBoxName);
+      final List<dynamic>? savedItems = _box!.get('items');
 
       if (savedItems != null) {
         final items = savedItems
-            .map((e) => CartItem.fromMap(Map<String, dynamic>.from(e)))
+            .map((e) => CartItem.fromMap(Map<String, dynamic>.from(e as Map)))
             .toList();
-        final total = items.fold(
+        final total = items.fold<double>(
             0.0, (sum, item) => sum + (item.product.price * item.quantity));
         emit(CartState(items: items, totalPrice: total).copyWith(
           isDesktop: state.isDesktop,
@@ -68,7 +70,8 @@ class CartCubit extends Cubit<CartState> {
           btnColor: state.btnColor,
         ));
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      debugPrint('CartCubit.loadLocalCart error: $e\n$stackTrace');
       emit(CartState.initial().copyWith(
         isDesktop: state.isDesktop,
         isDarkMode: state.isDarkMode,
@@ -84,74 +87,66 @@ class CartCubit extends Cubit<CartState> {
   void addToCart(ProductModel product) {
     try {
       final List<CartItem> updatedItems = List.from(state.items);
-      int index =
+      final int index =
           updatedItems.indexWhere((item) => item.product.id == product.id);
 
       if (index != -1) {
-        updatedItems[index].quantity += 1;
+        updatedItems[index] = updatedItems[index].copyWith(
+          quantity: updatedItems[index].quantity + 1,
+        );
       } else {
         updatedItems.add(CartItem(product: product, quantity: 1));
       }
       _updateAndSave(updatedItems);
-    } catch (e) {
-      // Silent fail for add operation
+    } catch (e, stackTrace) {
+      debugPrint('CartCubit.addToCart error: $e\n$stackTrace');
+      rethrow;
     }
   }
 
   void _updateAndSave(List<CartItem> items) {
-    try {
-      double total = items.fold(
-          0.0, (sum, item) => sum + (item.product.price * item.quantity));
-      emit(CartState(items: items, totalPrice: total).copyWith(
-        isDesktop: state.isDesktop,
-        isDarkMode: state.isDarkMode,
-        scaffoldBg: state.scaffoldBg,
-        surfaceColor: state.surfaceColor,
-        textColor: state.textColor,
-        secondaryColor: state.secondaryColor,
-        btnColor: state.btnColor,
-      ));
-      _saveToLocal(items);
-    } catch (e) {
-      final total = items.fold(
-          0.0, (sum, item) => sum + (item.product.price * item.quantity));
-      emit(CartState(items: items, totalPrice: total).copyWith(
-        isDesktop: state.isDesktop,
-        isDarkMode: state.isDarkMode,
-        scaffoldBg: state.scaffoldBg,
-        surfaceColor: state.surfaceColor,
-        textColor: state.textColor,
-        secondaryColor: state.secondaryColor,
-        btnColor: state.btnColor,
-      ));
-    }
+    final double total = items.fold<double>(
+        0.0, (sum, item) => sum + (item.product.price * item.quantity));
+    emit(CartState(items: items, totalPrice: total).copyWith(
+      isDesktop: state.isDesktop,
+      isDarkMode: state.isDarkMode,
+      scaffoldBg: state.scaffoldBg,
+      surfaceColor: state.surfaceColor,
+      textColor: state.textColor,
+      secondaryColor: state.secondaryColor,
+      btnColor: state.btnColor,
+    ));
+    _saveToLocal(items);
   }
 
   Future<void> _saveToLocal(List<CartItem> items) async {
     try {
-      _box ??= Hive.box(_cartBoxName);
+      _box ??= await Hive.openBox(_cartBoxName);
       await _box!.put('items', items.map((e) => e.toMap()).toList());
-    } catch (e) {
-      // Silent fail for save
+    } catch (e, stackTrace) {
+      debugPrint('CartCubit._saveToLocal error: $e\n$stackTrace');
     }
   }
 
   void removeFromCart(ProductModel product) {
     try {
       final List<CartItem> currentItems = List.from(state.items);
-      int index =
+      final int index =
           currentItems.indexWhere((item) => item.product.id == product.id);
 
       if (index != -1) {
         if (currentItems[index].quantity > 1) {
-          currentItems[index].quantity -= 1;
+          currentItems[index] = currentItems[index].copyWith(
+            quantity: currentItems[index].quantity - 1,
+          );
         } else {
           currentItems.removeAt(index);
         }
         _updateAndSave(currentItems);
       }
-    } catch (e) {
-      // Silent fail for remove
+    } catch (e, stackTrace) {
+      debugPrint('CartCubit.removeFromCart error: $e\n$stackTrace');
+      rethrow;
     }
   }
 
@@ -160,14 +155,15 @@ class CartCubit extends Cubit<CartState> {
       final List<CartItem> currentItems = List.from(state.items);
       currentItems.removeWhere((item) => item.product.id == product.id);
       _updateAndSave(currentItems);
-    } catch (e) {
-      // Silent fail for delete
+    } catch (e, stackTrace) {
+      debugPrint('CartCubit.deleteFromCart error: $e\n$stackTrace');
+      rethrow;
     }
   }
 
   Future<void> clearCart() async {
     try {
-      _box ??= Hive.box(_cartBoxName);
+      _box ??= await Hive.openBox(_cartBoxName);
       await _box!.clear();
       emit(CartState(items: [], totalPrice: 0.0).copyWith(
         isDesktop: state.isDesktop,
@@ -177,7 +173,8 @@ class CartCubit extends Cubit<CartState> {
         secondaryColor: state.secondaryColor,
         btnColor: state.btnColor,
       ));
-    } catch (e) {
+    } catch (e, stackTrace) {
+      debugPrint('CartCubit.clearCart error: $e\n$stackTrace');
       emit(CartState(items: [], totalPrice: 0.0).copyWith(
         isDesktop: state.isDesktop,
         scaffoldBg: state.scaffoldBg,

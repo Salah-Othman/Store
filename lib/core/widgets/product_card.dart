@@ -3,9 +3,11 @@ import 'package:TR/core/theme/app_theme.dart';
 import 'package:TR/core/utils/responsive_helper.dart';
 import 'package:TR/features/cart/logic/cubit/cart_cubit.dart';
 import 'package:TR/features/home/model/product_model.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:shimmer/shimmer.dart';
 
 class ProductCard extends StatelessWidget {
   const ProductCard({super.key, required this.product});
@@ -35,13 +37,23 @@ class ProductCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Expanded(
-            /// Product Image
             child: ClipRRect(
               borderRadius: const BorderRadius.vertical(
                 top: Radius.circular(15),
               ),
-              child: Image.network(
-                product.imageUrl,
+              child: CachedNetworkImage(
+                imageUrl: product.imageUrl,
+                fit: BoxFit.cover,
+                width: double.infinity,
+                placeholder: (context, url) => Shimmer.fromColors(
+                  baseColor: Colors.grey[300]!,
+                  highlightColor: Colors.grey[100]!,
+                  child: Container(color: Colors.white),
+                ),
+                errorWidget: (context, url, error) => Container(
+                  color: Colors.grey[200],
+                  child: const Icon(Icons.image_not_supported, color: Colors.grey),
+                ),
               ),
             ),
           ),

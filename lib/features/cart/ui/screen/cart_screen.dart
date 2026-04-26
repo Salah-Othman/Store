@@ -3,10 +3,12 @@ import 'package:TR/core/theme/app_theme.dart';
 import 'package:TR/features/cart/logic/cubit/cart_cubit.dart';
 import 'package:TR/features/cart/model/cart_item_model.dart';
 import 'package:TR/features/checkout/ui/screen/checkout_screen.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shimmer/shimmer.dart';
 
 class CartScreen extends StatelessWidget {
   const CartScreen({super.key});
@@ -188,11 +190,22 @@ class _CartItemTile extends StatelessWidget {
         children: [
           ClipRRect(
             borderRadius: BorderRadius.circular(8),
-            child: Image.network(
-              item.product.imageUrl,
+            child: CachedNetworkImage(
+              imageUrl: item.product.imageUrl,
               width: imageSize,
               height: imageSize,
               fit: BoxFit.cover,
+              placeholder: (context, url) => Shimmer.fromColors(
+                baseColor: Colors.grey[300]!,
+                highlightColor: Colors.grey[100]!,
+                child: Container(width: imageSize, height: imageSize, color: Colors.white),
+              ),
+              errorWidget: (context, url, error) => Container(
+                width: imageSize,
+                height: imageSize,
+                color: Colors.grey[200],
+                child: const Icon(Icons.image_not_supported, color: Colors.grey),
+              ),
             ),
           ),
           SizedBox(width: 12.w),

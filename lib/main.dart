@@ -17,9 +17,10 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:hive_flutter/adapters.dart';
 
 void main() async {
+
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-
+  
   await Hive.initFlutter();
   await Hive.openBox('cart_box');
   await Hive.openBox('settings_box');

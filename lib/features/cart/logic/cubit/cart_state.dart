@@ -1,6 +1,5 @@
 part of 'cart_cubit.dart';
 
-
 class CartState {
   final List<CartItem> items;
   final double totalPrice;
@@ -12,7 +11,7 @@ class CartState {
   final Color secondaryColor;
   final Color btnColor;
 
-  CartState({
+  const CartState({
     required this.items,
     required this.totalPrice,
     this.isDesktop = false,
@@ -20,11 +19,11 @@ class CartState {
     this.scaffoldBg = Colors.white,
     this.surfaceColor = Colors.white,
     this.textColor = Colors.black,
-    this.secondaryColor = const Color(0xFFFF6B00),
-    this.btnColor = const Color(0xFFFF6B00),
+    this.secondaryColor = AppTheme.secondaryColor,
+    this.btnColor = AppTheme.secondaryColor,
   });
 
-  factory CartState.initial() => CartState(items: [], totalPrice: 0.0);
+  factory CartState.initial() => const CartState(items: [], totalPrice: 0.0);
 
   CartState copyWith({
     List<CartItem>? items,
