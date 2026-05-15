@@ -4,7 +4,6 @@ import 'package:TR/features/admin/logic/cubit/admin_cubit.dart';
 import 'package:TR/features/home/model/category_model.dart';
 import 'package:TR/features/home/model/product_model.dart';
 import 'package:TR/features/orders_history/model/order_history_model.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -19,18 +18,36 @@ class AdminDashboardScreen extends StatefulWidget {
 
 class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<AdminCubit>().init(context);
+    });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    context.read<AdminCubit>().updateTheme(context);
+  }
+
+  @override
   Widget build(BuildContext context) {
-    context.read<AdminCubit>().initTheme(context);
     final state = context.watch<AdminCubit>().state;
     final l10n = AppLocalizations.of(context);
+    final scaffoldBg = Theme.of(context).scaffoldBackgroundColor;
 
     return Scaffold(
-      backgroundColor: state.scaffoldBg,
+      backgroundColor: scaffoldBg,
       appBar: AppBar(
-        backgroundColor: state.surfaceColor,
+       
         title: Text(
           l10n.adminDashboard,
-          style: GoogleFonts.notoSerif(fontWeight: FontWeight.bold, color: state.textColor),
+          style: Theme.of(
+              context,
+            ).textTheme.headlineMedium?.copyWith(
+              color: Theme.of(context).colorScheme.onSurface,         
+            ),
         ),
         centerTitle: true,
       ),
@@ -39,133 +56,82 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   }
 
   Widget _buildBody(BuildContext context, AdminState state, AppLocalizations l10n) {
-    if (!state.isAdmin && !state.isLoading) {
+    if (state.isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (!state.isAdmin) {
       return Center(child: Text(l10n.adminOnly, style: TextStyle(color: state.textColor)));
     }
 
-    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-      stream: FirebaseFirestore.instance.collection('products').snapshots(),
-      builder: (context, productSnapshot) {
-        return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-          stream: FirebaseFirestore.instance.collection('Orders').snapshots(),
-          builder: (context, orderSnapshot) {
-            return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-              stream: FirebaseFirestore.instance.collection('users').snapshots(),
-              builder: (context, userSnapshot) {
-                return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-                  stream: FirebaseFirestore.instance.collection('category').snapshots(),
-                  builder: (context, categorySnapshot) {
-                    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-                      stream: FirebaseFirestore.instance.collection('banners').snapshots(),
-                      builder: (context, bannerSnapshot) {
-                        if (productSnapshot.connectionState == ConnectionState.waiting ||
-                            orderSnapshot.connectionState == ConnectionState.waiting ||
-                            userSnapshot.connectionState == ConnectionState.waiting ||
-                            categorySnapshot.connectionState == ConnectionState.waiting ||
-                            bannerSnapshot.connectionState == ConnectionState.waiting) {
-                          return const Center(child: CircularProgressIndicator());
-                        }
+    if (state.errorMessage != null) {
+      return Center(child: Text(state.errorMessage!, style: TextStyle(color: state.textColor)));
+    }
 
-                        final products = (productSnapshot.data?.docs ?? [])
-                            .map((doc) => ProductModel.fromFirestore(doc.data(), doc.id))
-                            .toList();
-                        final orders = (orderSnapshot.data?.docs ?? [])
-                            .map((doc) => OrderModel.fromFirestore(doc.data(), doc.id))
-                            .toList()
-                          ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
-                        final categories = (categorySnapshot.data?.docs ?? [])
-                            .map((doc) => CategoryModel.fromFirestore(doc.data(), doc.id))
-                            .toList();
-                        final users = userSnapshot.data?.docs ?? [];
-                        final banners = bannerSnapshot.data?.docs ?? [];
+    final products = state.products;
+    final orders = state.orders;
+    final categories = state.categories;
 
-                        context.read<AdminCubit>().updateData(
-                          products: products,
-                          orders: orders,
-                          categories: categories,
-                          users: users,
-                          banners: banners,
-                        );
-
-                        final totalRevenue = orders.fold<double>(0, (s, o) => s + o.totalPrice);
-                        final pendingOrders = orders.where((o) => o.status == 'Pending').length;
-                        final successOrders = orders.where((o) => o.status == 'Success').length;
-
-                        return ListView(
-                          padding: const EdgeInsets.all(16),
-                          children: [
-                            _MetricsGrid(
-                              metrics: [
-                                _MetricData(title: l10n.totalProducts, value: products.length.toString(), icon: Icons.inventory_2_outlined),
-                                _MetricData(title: l10n.totalCategories, value: categories.length.toString(), icon: Icons.category_outlined),
-                                _MetricData(title: l10n.totalOrders, value: orders.length.toString(), icon: Icons.receipt_long_outlined),
-                                _MetricData(title: l10n.totalUsers, value: users.length.toString(), icon: Icons.people_alt_outlined),
-                                _MetricData(title: l10n.pendingOrdersLabel, value: pendingOrders.toString(), icon: Icons.schedule_outlined),
-                                _MetricData(title: l10n.successOrdersLabel, value: successOrders.toString(), icon: Icons.check_circle_outline),
-                              ],
-                              state: state,
-                            ),
-                            const SizedBox(height: 16),
-                            _RevenueCard(totalRevenue: totalRevenue, state: state, l10n: l10n),
-                            const SizedBox(height: 16),
-                            _SectionCard(
-                              title: l10n.quickActions,
-                              state: state,
-                              l10n: l10n,
-                              child: _QuickActions(
-                                onAddProduct: () => _showAddProductDialog(context, categories),
-                                onAddCategory: () => _showAddCategoryDialog(context),
-                                onAddBanner: () => _showAddBannerDialog(context),
-                                l10n: l10n,
-                              ),
-                            ),
-                            const SizedBox(height: 24),
-                            _SectionCard(
-                              title: l10n.pendingOrdersLabel,
-                              state: state,
-                              l10n: l10n,
-                              child: orders.where((o) => o.status == 'Pending').isEmpty
-                                  ? _EmptyState(message: l10n.noOrdersFound, state: state)
-                                  : Column(children: orders.where((o) => o.status == 'Pending').take(5).map((o) => _OrderRow(order: o, state: state, l10n: l10n)).toList()),
-                            ),
-                            const SizedBox(height: 16),
-                            _SectionCard(
-                              title: l10n.successOrdersLabel,
-                              state: state,
-                              l10n: l10n,
-                              child: orders.where((o) => o.status == 'Success').isEmpty
-                                  ? _EmptyState(message: l10n.noOrdersFound, state: state)
-                                  : Column(children: orders.where((o) => o.status == 'Success').take(5).map((o) => _OrderRow(order: o, state: state, l10n: l10n)).toList()),
-                            ),
-                            const SizedBox(height: 16),
-                            _SectionCard(
-                              title: l10n.productCatalog,
-                              state: state,
-                              l10n: l10n,
-                              child: products.isEmpty
-                                  ? _EmptyState(message: l10n.adminNoProducts, state: state)
-                                  : Column(children: products.take(6).map((p) => _ProductRow(product: p, allowAdminActions: true, state: state, l10n: l10n, onDelete: () => context.read<AdminCubit>().deleteProduct(p.id))).toList()),
-                            ),
-                            const SizedBox(height: 16),
-                            _SectionCard(
-                              title: l10n.categoryCatalog,
-                              state: state,
-                              l10n: l10n,
-                              child: categories.isEmpty
-                                  ? _EmptyState(message: l10n.adminNoCategories, state: state)
-                                  : Column(children: categories.take(6).map((c) => _CategoryRow(category: c, allowAdminActions: true, state: state, l10n: l10n, onDelete: () => context.read<AdminCubit>().deleteCategory(c.id))).toList()),
-                            ),
-                          ],
-                        );
-                      },
-                    );
-                  },
-                );
-              },
-            );
-          },
-        );
-      },
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        _MetricsGrid(
+          metrics: [
+            _MetricData(title: l10n.totalProducts, value: products.length.toString(), icon: Icons.inventory_2_outlined),
+            _MetricData(title: l10n.totalCategories, value: categories.length.toString(), icon: Icons.category_outlined),
+            _MetricData(title: l10n.totalOrders, value: orders.length.toString(), icon: Icons.receipt_long_outlined),
+            _MetricData(title: l10n.totalUsers, value: state.users.length.toString(), icon: Icons.people_alt_outlined),
+            _MetricData(title: l10n.pendingOrdersLabel, value: state.pendingOrders.toString(), icon: Icons.schedule_outlined),
+            _MetricData(title: l10n.successOrdersLabel, value: state.successOrders.toString(), icon: Icons.check_circle_outline),
+          ],
+          state: state,
+        ),
+        const SizedBox(height: 16),
+        _RevenueCard(totalRevenue: state.totalRevenue, state: state, l10n: l10n),
+        const SizedBox(height: 16),
+        _SectionCard(
+          title: l10n.quickActions,
+          state: state,
+          child: _QuickActions(
+            onAddProduct: () => _showAddProductDialog(context, categories),
+            onAddCategory: () => _showAddCategoryDialog(context),
+            onAddBanner: () => _showAddBannerDialog(context),
+            l10n: l10n,
+          ),
+        ),
+        const SizedBox(height: 24),
+        _SectionCard(
+          title: l10n.pendingOrdersLabel,
+          state: state,
+          child: orders.where((o) => o.status == 'Pending').isEmpty
+              ? _EmptyState(message: l10n.noOrdersFound, state: state)
+              : Column(children: orders.where((o) => o.status == 'Pending').take(5).map((o) => _OrderRow(order: o, state: state, l10n: l10n)).toList()),
+        ),
+        const SizedBox(height: 16),
+        _SectionCard(
+          title: l10n.successOrdersLabel,
+          state: state,
+          child: orders.where((o) => o.status == 'Success').isEmpty
+              ? _EmptyState(message: l10n.noOrdersFound, state: state)
+              : Column(children: orders.where((o) => o.status == 'Success').take(5).map((o) => _OrderRow(order: o, state: state, l10n: l10n)).toList()),
+        ),
+        const SizedBox(height: 16),
+        _SectionCard(
+          title: l10n.productCatalog,
+          state: state,
+          child: products.isEmpty
+              ? _EmptyState(message: l10n.adminNoProducts, state: state)
+              : Column(children: products.take(6).map((p) => _ProductRow(product: p, allowAdminActions: true, state: state, l10n: l10n, onDelete: () => context.read<AdminCubit>().deleteProduct(p.id))).toList()),
+        ),
+        const SizedBox(height: 16),
+        _SectionCard(
+          title: l10n.categoryCatalog,
+          state: state,
+          child: categories.isEmpty
+              ? _EmptyState(message: l10n.adminNoCategories, state: state)
+              : Column(children: categories.take(6).map((c) => _CategoryRow(category: c, allowAdminActions: true, state: state, l10n: l10n, onDelete: () => context.read<AdminCubit>().deleteCategory(c.id))).toList()),
+        ),
+      ],
     );
   }
 
@@ -178,7 +144,15 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          title: Text(l10n.addCategory),
+          title: 
+          Text(
+          l10n.addCategory,
+          style: Theme.of(
+              context,
+            ).textTheme.headlineMedium?.copyWith(
+              color: Theme.of(context).colorScheme.onSurface,         
+            ),
+        ),
           content: Form(
             key: formKey,
             child: Column(
@@ -231,7 +205,14 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
-              title: Text(l10n.addProduct),
+              title:           Text(
+          l10n.addProduct,
+          style: Theme.of(
+              context,
+            ).textTheme.headlineMedium?.copyWith(
+              color: Theme.of(context).colorScheme.onSurface,         
+            ),
+        ),
               content: Form(
                 key: formKey,
                 child: SingleChildScrollView(
@@ -325,7 +306,14 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          title: Text(l10n.addBanner),
+          title:           Text(
+          l10n.addBanner,
+          style: Theme.of(
+              context,
+            ).textTheme.headlineMedium?.copyWith(
+              color: Theme.of(context).colorScheme.onSurface,         
+            ),
+        ),
           content: Form(
             key: formKey,
             child: TextFormField(
@@ -356,7 +344,7 @@ class _MetricData {
   final String title;
   final String value;
   final IconData icon;
-  _MetricData({required this.title, required this.value, required this.icon});
+  const _MetricData({required this.title, required this.value, required this.icon});
 }
 
 class _MetricsGrid extends StatelessWidget {
@@ -381,9 +369,9 @@ class _MetricsGrid extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Icon(metric.icon, color: state.primaryColor),
-              Text(metric.value, style: GoogleFonts.notoSerif(fontSize: 24, fontWeight: FontWeight.bold, color: state.primaryColor)),
-              Text(metric.title, style: GoogleFonts.manrope(color: state.textSecondaryColor, fontWeight: FontWeight.w600)),
+              Icon(metric.icon, color: state.textColor),
+              Text(metric.value, style: GoogleFonts.notoSerif(fontSize: 24, fontWeight: FontWeight.bold, color: state.textColor)),
+              Text(metric.title, style: GoogleFonts.manrope(color: state.textColor, fontWeight: FontWeight.w600)),
             ],
           ),
         );
@@ -422,10 +410,9 @@ class _RevenueCard extends StatelessWidget {
 class _SectionCard extends StatelessWidget {
   final String title;
   final AdminState state;
-  final AppLocalizations l10n;
   final Widget child;
 
-  const _SectionCard({required this.title, required this.state, required this.l10n, required this.child});
+  const _SectionCard({required this.title, required this.state, required this.child});
 
   @override
   Widget build(BuildContext context) {
@@ -435,7 +422,14 @@ class _SectionCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: GoogleFonts.notoSerif(fontSize: 20, fontWeight: FontWeight.bold, color: state.primaryColor)),
+                    Text(
+          title,
+          style: Theme.of(
+              context,
+            ).textTheme.headlineMedium?.copyWith(
+              color: Theme.of(context).colorScheme.onSurface,         
+            ),
+        ),
           const SizedBox(height: 12),
           child,
         ],
@@ -454,6 +448,7 @@ class _QuickActions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    
     return Column(
       children: [
         Row(
@@ -491,8 +486,8 @@ class _OrderRow extends StatelessWidget {
     final localeName = Localizations.localeOf(context).languageCode;
     return ListTile(
       contentPadding: EdgeInsets.zero,
-      leading: CircleAvatar(backgroundColor: state.primaryColor.withValues(alpha: 0.18), child: Icon(Icons.receipt_long, color: state.primaryColor)),
-      title: Text(l10n.orderNumber(order.id.substring(0, 8))),
+      leading: CircleAvatar(backgroundColor: state.primaryColor.withValues(alpha: 0.18), child: Icon(Icons.receipt_long, color: state.textColor)),
+      title: Text(l10n.orderNumber(order.id.length >= 8 ? order.id.substring(0, 8) : order.id)),
       subtitle: Text(DateFormat('dd MMM yyyy, hh:mm a', localeName).format(order.createdAt)),
     );
   }

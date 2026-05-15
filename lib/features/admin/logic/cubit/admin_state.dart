@@ -2,6 +2,7 @@ part of 'admin_cubit.dart';
 
 class AdminState {
   final bool isLoading;
+  final bool isRefreshing;
   final bool isDarkMode;
   final Color scaffoldBg;
   final Color surfaceColor;
@@ -21,14 +22,15 @@ class AdminState {
   final int successOrders;
   final bool isAdmin;
 
-  AdminState({
+  const AdminState({
     this.isLoading = true,
+    this.isRefreshing = false,
     this.isDarkMode = false,
     this.scaffoldBg = Colors.white,
     this.surfaceColor = Colors.white,
     this.textColor = Colors.black,
     this.textSecondaryColor = Colors.grey,
-    this.primaryColor = const Color(0xFFFF6B00),
+    this.primaryColor = AppTheme.secondaryColor,
     this.errorMessage,
     this.products = const [],
     this.orders = const [],
@@ -43,13 +45,14 @@ class AdminState {
 
   AdminState copyWith({
     bool? isLoading,
+    bool? isRefreshing,
     bool? isDarkMode,
     Color? scaffoldBg,
     Color? surfaceColor,
     Color? textColor,
     Color? textSecondaryColor,
     Color? primaryColor,
-    String? errorMessage,
+    Object? errorMessage = _sentinel,
     List<ProductModel>? products,
     List<OrderModel>? orders,
     List<CategoryModel>? categories,
@@ -62,13 +65,14 @@ class AdminState {
   }) {
     return AdminState(
       isLoading: isLoading ?? this.isLoading,
+      isRefreshing: isRefreshing ?? this.isRefreshing,
       isDarkMode: isDarkMode ?? this.isDarkMode,
       scaffoldBg: scaffoldBg ?? this.scaffoldBg,
       surfaceColor: surfaceColor ?? this.surfaceColor,
       textColor: textColor ?? this.textColor,
       textSecondaryColor: textSecondaryColor ?? this.textSecondaryColor,
       primaryColor: primaryColor ?? this.primaryColor,
-      errorMessage: errorMessage ?? this.errorMessage,
+      errorMessage: errorMessage == _sentinel ? this.errorMessage : errorMessage as String?,
       products: products ?? this.products,
       orders: orders ?? this.orders,
       categories: categories ?? this.categories,
@@ -80,4 +84,6 @@ class AdminState {
       isAdmin: isAdmin ?? this.isAdmin,
     );
   }
+
+  static const _sentinel = Object();
 }

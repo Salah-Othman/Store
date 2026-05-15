@@ -11,25 +11,28 @@ import 'package:TR/features/orders_history/model/order_history_model.dart';
 part 'admin_state.dart';
 
 class AdminCubit extends Cubit<AdminState> {
-  AdminCubit() : super(AdminState());
+  AdminCubit() : super(const AdminState());
 
-  void initTheme(BuildContext context) {
+  void updateTheme(BuildContext context) {
     final isDarkMode = Hive.box('settings_box').get('isDarkMode', defaultValue: false) as bool;
     final theme = Theme.of(context);
-    final scaffoldBg = theme.scaffoldBackgroundColor;
-    final surfaceColor = theme.colorScheme.surface;
-    final textColor = theme.colorScheme.onSurface;
-    final textSecondaryColor = theme.colorScheme.onSurface.withValues(alpha: 0.6);
-    final primaryColor = AppTheme.primaryColor;
 
     emit(state.copyWith(
       isDarkMode: isDarkMode,
-      scaffoldBg: scaffoldBg,
-      surfaceColor: surfaceColor,
-      textColor: textColor,
-      textSecondaryColor: textSecondaryColor,
-      primaryColor: primaryColor,
+      scaffoldBg: theme.scaffoldBackgroundColor,
+      surfaceColor: theme.colorScheme.surface,
+      textColor: theme.colorScheme.onSurface,
+      textSecondaryColor: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+      primaryColor: AppTheme.primaryColor,
     ));
+  }
+
+  Future<void> init(BuildContext context) async {
+    updateTheme(context);
+    await checkAdminStatus();
+    if (state.isAdmin) {
+      await loadData();
+    }
   }
 
   Future<void> checkAdminStatus() async {
@@ -49,37 +52,54 @@ class AdminCubit extends Cubit<AdminState> {
     }
   }
 
-  void updateData({
-    List<ProductModel>? products,
-    List<OrderModel>? orders,
-    List<CategoryModel>? categories,
-    List<DocumentSnapshot>? users,
-    List<DocumentSnapshot>? banners,
-  }) {
-    final ordersList = orders ?? [];
-    final totalRevenue = ordersList.fold<double>(0, (total, order) => total + order.totalPrice);
-    final pendingOrders = ordersList.where((o) => o.status == 'Pending').length;
-    final successOrders = ordersList.where((o) => o.status == 'Success').length;
+  Future<void> loadData() async {
+    final isInitialLoad = state.products.isEmpty && state.orders.isEmpty;
+    if (isInitialLoad) {
+      emit(state.copyWith(isLoading: true));
+    } else {
+      emit(state.copyWith(isRefreshing: true));
+    }
+    try {
+      final results = await Future.wait([
+        FirebaseFirestore.instance.collection('products').get(),
+        FirebaseFirestore.instance.collection('Orders').get(),
+        FirebaseFirestore.instance.collection('users').get(),
+        FirebaseFirestore.instance.collection('category').get(),
+        FirebaseFirestore.instance.collection('banners').get(),
+      ]);
 
-    emit(state.copyWith(
-      products: products,
-      orders: orders,
-      categories: categories,
-      users: users,
-      banners: banners,
-      totalRevenue: totalRevenue,
-      pendingOrders: pendingOrders,
-      successOrders: successOrders,
-      isLoading: false,
-    ));
-  }
+      final products = results[0].docs
+          .map((doc) => ProductModel.fromFirestore(doc.data(), doc.id))
+          .toList();
+      final orders = results[1].docs
+          .map((doc) => OrderModel.fromFirestore(doc.data(), doc.id))
+          .toList();
+      final users = results[2].docs;
+      final categories = results[3].docs
+          .map((doc) => CategoryModel.fromFirestore(doc.data(), doc.id))
+          .toList();
+      final banners = results[4].docs;
 
-  void setLoading(bool loading) {
-    emit(state.copyWith(isLoading: loading));
-  }
+      final totalRevenue = orders.fold<double>(0, (s, o) => s + o.totalPrice);
+      final pendingOrders = orders.where((o) => o.status == 'Pending').length;
+      final successOrders = orders.where((o) => o.status == 'Success').length;
 
-  void setError(String message) {
-    emit(state.copyWith(errorMessage: message, isLoading: false));
+      emit(state.copyWith(
+        products: products,
+        orders: orders,
+        categories: categories,
+        users: users,
+        banners: banners,
+        totalRevenue: totalRevenue,
+        pendingOrders: pendingOrders,
+        successOrders: successOrders,
+        isLoading: false,
+        isRefreshing: false,
+        errorMessage: null,
+      ));
+    } catch (e) {
+      emit(state.copyWith(errorMessage: e.toString(), isLoading: false, isRefreshing: false));
+    }
   }
 
   Future<void> addCategory(String name, String imageUrl) async {
@@ -87,6 +107,7 @@ class AdminCubit extends Cubit<AdminState> {
       'name': name,
       'imageUrl': imageUrl,
     });
+    await loadData();
   }
 
   Future<void> addProduct({
@@ -105,6 +126,7 @@ class AdminCubit extends Cubit<AdminState> {
       'category': category,
       'isAvailable': isAvailable,
     });
+    await loadData();
   }
 
   Future<void> addBanner(String imageUrl) async {
@@ -112,27 +134,33 @@ class AdminCubit extends Cubit<AdminState> {
       'imageUrl': imageUrl,
       'createdAt': FieldValue.serverTimestamp(),
     });
+    await loadData();
   }
 
   Future<void> updateOrderStatus(String orderId, String status) async {
     await FirebaseFirestore.instance.collection('Orders').doc(orderId).update({
       'status': status,
     });
+    await loadData();
   }
 
   Future<void> deleteProduct(String productId) async {
     await FirebaseFirestore.instance.collection('products').doc(productId).delete();
+    await loadData();
   }
 
   Future<void> deleteCategory(String categoryId) async {
     await FirebaseFirestore.instance.collection('category').doc(categoryId).delete();
+    await loadData();
   }
 
   Future<void> deleteBanner(String bannerId) async {
     await FirebaseFirestore.instance.collection('banners').doc(bannerId).delete();
+    await loadData();
   }
 
   Future<void> deleteUser(String userId) async {
     await FirebaseFirestore.instance.collection('users').doc(userId).delete();
+    await loadData();
   }
 }
