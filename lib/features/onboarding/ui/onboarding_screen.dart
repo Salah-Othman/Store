@@ -101,13 +101,13 @@ class _OnBoardingScreenState extends State<OnBoardingScreen> {
                     controller: _pageController,
                     count: pages.length,
                     effect: ExpandingDotsEffect(
-                      activeDotColor: AppTheme.secondaryColor,
+                      activeDotColor: AppTheme.primaryColor,
                       dotHeight: 8.h,
                       dotWidth: 8.w,
                     ),
                   ),
                   FloatingActionButton(
-                    backgroundColor: AppTheme.secondaryColor,
+                    backgroundColor: AppTheme.primaryColor,
                     onPressed: () {
                       if (isLastPage) {
                         Navigator.pushReplacement(
