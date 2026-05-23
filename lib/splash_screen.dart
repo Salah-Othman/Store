@@ -73,7 +73,7 @@ class _SplashScreenState extends State<SplashScreen>
   Widget build(BuildContext context) {
     final isDarkMode = Hive.box('settings_box').get('isDarkMode', defaultValue: false) as bool;
     final bgColor = isDarkMode ? AppTheme.darkBackground : AppTheme.primaryColor;
-    final textColor = isDarkMode ? Colors.white : Colors.white;
+    final textColor = Colors.white;
     
     return Scaffold(
       backgroundColor: bgColor,

@@ -3,7 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 abstract class FirebaseService {
   Future<QuerySnapshot> getCollection(String collectionPath);
   Future<DocumentSnapshot> getDocument(String collectionPath, String docId);
-  Future<void> addDocument(String collectionPath, Map<String, dynamic> data);
+  Future<String> addDocument(String collectionPath, Map<String, dynamic> data);
   Future<void> updateDocument(String collectionPath, String docId, Map<String, dynamic> data);
   Future<void> deleteDocument(String collectionPath, String docId);
   Stream<DocumentSnapshot> streamDocument(String collectionPath, String docId);
@@ -26,8 +26,9 @@ class FirebaseServiceImpl implements FirebaseService {
   }
 
   @override
-  Future<void> addDocument(String collectionPath, Map<String, dynamic> data) async {
-    await _firestore.collection(collectionPath).add(data);
+  Future<String> addDocument(String collectionPath, Map<String, dynamic> data) async {
+    final docRef = await _firestore.collection(collectionPath).add(data);
+    return docRef.id;
   }
 
   @override

@@ -17,6 +17,9 @@ class AddressModel {
   };
 
   factory AddressModel.fromMap(Map<String, dynamic> map) => AddressModel(
-    city: map['city'], area: map['area'], street: map['street'], building: map['building'],
+    city: map['city'] ?? '',
+    area: map['area'] ?? '',
+    street: map['street'] ?? '',
+    building: map['building'] ?? '',
   );
 }

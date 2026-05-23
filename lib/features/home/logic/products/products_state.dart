@@ -1,5 +1,4 @@
-
-import 'package:TR/features/home/model/product_model.dart';
+part of 'products_cubit.dart';
 
 abstract class ProductsState {}
 
@@ -14,6 +13,5 @@ class ProductsError extends ProductsState {
   ProductsError(this.message);
 }
 class ProductsEmpty extends ProductsState {
-   final String message = 'No products available at the moment';
   ProductsEmpty();
 }

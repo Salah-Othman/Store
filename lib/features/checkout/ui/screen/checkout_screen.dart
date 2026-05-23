@@ -11,6 +11,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 class CheckoutScreen extends StatefulWidget {
   const CheckoutScreen({super.key});
 
+  static const double deliveryFee = 25.0;
+
   @override
   State<CheckoutScreen> createState() => _CheckoutScreenState();
 }
@@ -19,7 +21,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
-  final _addressController = TextEditingController();
   final _cityController = TextEditingController();
   final _areaController = TextEditingController();
   final _streetController = TextEditingController();
@@ -40,7 +41,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   void dispose() {
     _nameController.dispose();
     _phoneController.dispose();
-    _addressController.dispose();
     _cityController.dispose();
     _areaController.dispose();
     _streetController.dispose();
@@ -54,8 +54,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     final l10n = AppLocalizations.of(context);
     final state = context.watch<CheckoutCubit>().state;
     
-    final surfaceColor = _getThemeColor(state, (s) => s.surfaceColor);
-    final textColor = _getThemeColor(state, (s) => s.textColor);
+    final surfaceColor = state.surfaceColor;
+    final textColor = state.textColor;
 
     return Scaffold(
       appBar: AppBar(
@@ -162,11 +162,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       final cartState = context.read<CartCubit>().state;
       String address = '';
       if (_showNewAddressForm) {
-        address = "${_buildingController.text}, ${_streetController.text}, ${_areaController.text}, ${_cityController.text}";
-        if (address == ', , , ') {
+        if ([_buildingController, _streetController, _areaController, _cityController].every((c) => c.text.trim().isEmpty)) {
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context).requiredField)));
           return;
         }
+        address = "${_buildingController.text}, ${_streetController.text}, ${_areaController.text}, ${_cityController.text}";
         _saveNewAddress();
       } else if (_selectedAddress != null) {
         address = _selectedAddress!;
@@ -174,7 +174,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context).requiredField)));
         return;
       }
-      context.read<CheckoutCubit>().placeOrder(name: _nameController.text, phone: _phoneController.text, address: address, cartItems: cartState.items.map((i) => {'id': i.product.id, 'name': i.product.name, 'price': i.product.price, 'quantity': i.quantity}).toList(), total: cartState.totalPrice + 25);
+      context.read<CheckoutCubit>().placeOrder(name: _nameController.text, phone: _phoneController.text, address: address, cartItems: cartState.items.map((i) => {'id': i.product.id, 'name': i.product.name, 'price': i.product.price, 'quantity': i.quantity}).toList(), total: cartState.totalPrice + CheckoutScreen.deliveryFee);
     }
   }
 
@@ -210,7 +210,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         _savedAddresses.addAll((data['addresses'] as List).map((e) => Map<String, dynamic>.from(e as Map)));
         if (_savedAddresses.isNotEmpty && _selectedAddress == null) {
           _selectedAddress = _formatAddress(_savedAddresses.first);
-          _addressController.text = _selectedAddress!;
         }
       }
     } catch (_) {}
@@ -235,11 +234,5 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     } catch (_) {}
   }
 
-  Color _getThemeColor(CheckoutState state, Color Function(dynamic s) getter) {
-    if (state is CheckoutInitial) return getter(state);
-    if (state is CheckoutLoading) return getter(state);
-    if (state is CheckoutSuccess) return getter(state);
-    if (state is CheckoutError) return getter(state);
-    return Colors.white;
-  }
+
 }

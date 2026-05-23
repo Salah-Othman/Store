@@ -1,8 +1,10 @@
+import 'dart:developer' as developer;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:TR/core/services/firebase_service.dart';
 import 'package:TR/core/theme/app_theme.dart';
 import 'package:TR/features/home/model/category_model.dart';
 import 'package:TR/features/home/model/product_model.dart';
@@ -11,7 +13,11 @@ import 'package:TR/features/orders_history/model/order_history_model.dart';
 part 'admin_state.dart';
 
 class AdminCubit extends Cubit<AdminState> {
-  AdminCubit() : super(const AdminState());
+  AdminCubit({FirebaseService? firebaseService})
+      : _firebaseService = firebaseService ?? FirebaseServiceImpl(FirebaseFirestore.instance),
+        super(const AdminState());
+
+  final FirebaseService _firebaseService;
 
   void updateTheme(BuildContext context) {
     final isDarkMode = Hive.box('settings_box').get('isDarkMode', defaultValue: false) as bool;
@@ -43,11 +49,12 @@ class AdminCubit extends Cubit<AdminState> {
     }
 
     try {
-      final doc = await FirebaseFirestore.instance.collection('users').doc(uid).get();
-      final data = doc.data();
+      final doc = await _firebaseService.getDocument('users', uid);
+      final data = doc.data() as Map<String, dynamic>?;
       final isAdmin = data?['role'] == 'admin' || data?['isAdmin'] == true;
       emit(state.copyWith(isAdmin: isAdmin, isLoading: false));
     } catch (e) {
+      developer.log('checkAdminStatus error: $e', name: 'AdminCubit');
       emit(state.copyWith(isAdmin: false, isLoading: false));
     }
   }
@@ -61,22 +68,22 @@ class AdminCubit extends Cubit<AdminState> {
     }
     try {
       final results = await Future.wait([
-        FirebaseFirestore.instance.collection('products').get(),
-        FirebaseFirestore.instance.collection('Orders').get(),
-        FirebaseFirestore.instance.collection('users').get(),
-        FirebaseFirestore.instance.collection('category').get(),
-        FirebaseFirestore.instance.collection('banners').get(),
+        _firebaseService.getCollection('products'),
+        _firebaseService.getCollection('Orders'),
+        _firebaseService.getCollection('users'),
+        _firebaseService.getCollection('category'),
+        _firebaseService.getCollection('banners'),
       ]);
 
       final products = results[0].docs
-          .map((doc) => ProductModel.fromFirestore(doc.data(), doc.id))
+          .map((doc) => ProductModel.fromFirestore(doc.data() as Map<String, dynamic>, doc.id))
           .toList();
       final orders = results[1].docs
-          .map((doc) => OrderModel.fromFirestore(doc.data(), doc.id))
+          .map((doc) => OrderModel.fromFirestore(doc.data() as Map<String, dynamic>, doc.id))
           .toList();
       final users = results[2].docs;
       final categories = results[3].docs
-          .map((doc) => CategoryModel.fromFirestore(doc.data(), doc.id))
+          .map((doc) => CategoryModel.fromFirestore(doc.data() as Map<String, dynamic>, doc.id))
           .toList();
       final banners = results[4].docs;
 
@@ -98,12 +105,13 @@ class AdminCubit extends Cubit<AdminState> {
         errorMessage: null,
       ));
     } catch (e) {
+      developer.log('loadData error: $e', name: 'AdminCubit');
       emit(state.copyWith(errorMessage: e.toString(), isLoading: false, isRefreshing: false));
     }
   }
 
   Future<void> addCategory(String name, String imageUrl) async {
-    await FirebaseFirestore.instance.collection('category').add({
+    await _firebaseService.addDocument('category', {
       'name': name,
       'imageUrl': imageUrl,
     });
@@ -118,7 +126,7 @@ class AdminCubit extends Cubit<AdminState> {
     required String category,
     required bool isAvailable,
   }) async {
-    await FirebaseFirestore.instance.collection('products').add({
+    await _firebaseService.addDocument('products', {
       'name': name,
       'description': description,
       'price': price,
@@ -138,29 +146,29 @@ class AdminCubit extends Cubit<AdminState> {
   }
 
   Future<void> updateOrderStatus(String orderId, String status) async {
-    await FirebaseFirestore.instance.collection('Orders').doc(orderId).update({
+    await _firebaseService.updateDocument('Orders', orderId, {
       'status': status,
     });
     await loadData();
   }
 
   Future<void> deleteProduct(String productId) async {
-    await FirebaseFirestore.instance.collection('products').doc(productId).delete();
+    await _firebaseService.deleteDocument('products', productId);
     await loadData();
   }
 
   Future<void> deleteCategory(String categoryId) async {
-    await FirebaseFirestore.instance.collection('category').doc(categoryId).delete();
+    await _firebaseService.deleteDocument('category', categoryId);
     await loadData();
   }
 
   Future<void> deleteBanner(String bannerId) async {
-    await FirebaseFirestore.instance.collection('banners').doc(bannerId).delete();
+    await _firebaseService.deleteDocument('banners', bannerId);
     await loadData();
   }
 
   Future<void> deleteUser(String userId) async {
-    await FirebaseFirestore.instance.collection('users').doc(userId).delete();
+    await _firebaseService.deleteDocument('users', userId);
     await loadData();
   }
 }

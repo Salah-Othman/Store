@@ -1,9 +1,10 @@
 import 'package:TR/core/errors/error_handler.dart';
 import 'package:TR/core/services/firebase_service.dart';
-import 'package:TR/features/home/logic/products/products_state.dart';
 import 'package:TR/features/home/model/product_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
+part 'products_state.dart';
 
 class ProductsCubit extends Cubit<ProductsState> {
   ProductsCubit({FirebaseService? firebaseService})

@@ -1,18 +1,18 @@
 import 'package:TR/core/errors/error_handler.dart';
 import 'package:TR/core/services/firebase_service.dart';
-import 'package:bloc/bloc.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 part 'checkout_state.dart';
 
 class CheckoutCubit extends Cubit<CheckoutState> {
   CheckoutCubit({FirebaseService? firebaseService})
-      : _firestore = FirebaseFirestore.instance,
+      : _firebaseService = firebaseService ?? FirebaseServiceImpl(FirebaseFirestore.instance),
         super(CheckoutInitial());
 
-  final FirebaseFirestore _firestore;
+  final FirebaseService _firebaseService;
   Color _surfaceColor = Colors.white;
   Color _textColor = Colors.black;
   Color _primaryColor = const Color(0xFF2196F3);
@@ -62,7 +62,7 @@ class CheckoutCubit extends Cubit<CheckoutState> {
         return;
       }
 
-      await _firestore.collection('Orders').add({
+      final orderId = await _firebaseService.addDocument('Orders', {
         'userId': uid,
         'customerName': name.trim(),
         'customerPhone': phone.trim(),
@@ -71,9 +71,9 @@ class CheckoutCubit extends Cubit<CheckoutState> {
         'totalPrice': total,
         'status': 'Pending',
         'createdAt': FieldValue.serverTimestamp(),
-      }).timeout(const Duration(seconds: 30));
+      });
 
-      emit(CheckoutSuccess('Order placed successfully',
+      emit(CheckoutSuccess(orderId,
         surfaceColor: _surfaceColor,
         textColor: _textColor,
         primaryColor: _primaryColor,

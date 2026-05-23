@@ -3,7 +3,6 @@ import 'package:TR/core/utils/responsive_helper.dart';
 import 'package:TR/features/detail/logic/cubit/detail_cubit.dart';
 import 'package:TR/features/detail/ui/screen/detail_screen.dart';
 import 'package:TR/features/home/logic/products/products_cubit.dart';
-import 'package:TR/features/home/logic/products/products_state.dart';
 import 'package:TR/features/home/ui/widget/product_grid_shimmer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -91,7 +90,7 @@ class ProductGrid extends StatelessWidget {
         } else if (state is ProductsEmpty) {
           return SliverFillRemaining(
             hasScrollBody: false,
-            child: Center(child: Text(state.message)),
+            child: Center(child: Text('No products available at the moment')),
           );
         }
         return const SliverFillRemaining(

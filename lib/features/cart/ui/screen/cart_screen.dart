@@ -32,7 +32,7 @@ class CartScreen extends StatelessWidget {
       ),
       body: BlocBuilder<CartCubit, CartState>(
         builder: (context, state) {
-          if (state.items.isEmpty) return _buildEmptyState(context);
+          if (state.items.isEmpty) return _buildEmptyState(context, state);
 
           if (state.isDesktop) {
             return _buildDesktopLayout(context, state);
@@ -52,7 +52,7 @@ class CartScreen extends StatelessWidget {
             padding: EdgeInsets.all(24.w),
             itemCount: state.items.length,
             itemBuilder: (context, index) =>
-                _CartItemTile(item: state.items[index], isDesktop: true),
+                _CartItemTile(item: state.items[index], isDesktop: true, state: state),
           ),
         ),
         Container(
@@ -76,7 +76,7 @@ class CartScreen extends StatelessWidget {
             padding: EdgeInsets.all(16.w),
             itemCount: state.items.length,
             itemBuilder: (context, index) =>
-                _CartItemTile(item: state.items[index], isDesktop: false),
+                _CartItemTile(item: state.items[index], isDesktop: false, state: state),
           ),
         ),
         _buildCheckoutSection(context, state, isDesktop: false),
@@ -97,7 +97,7 @@ class CartScreen extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _row(context, l10n.totalAmount, "${state.totalPrice} EGP", isTotal: true, isDesktop: isDesktop),
+          _row(context, state, l10n.totalAmount, "${state.totalPrice} EGP", isTotal: true, isDesktop: isDesktop),
           SizedBox(height: 20.h),
           ElevatedButton(
             onPressed: () => Navigator.push(
@@ -121,8 +121,7 @@ class CartScreen extends StatelessWidget {
     );
   }
 
-  Widget _row(BuildContext context, String label, String value, {bool isTotal = false, required bool isDesktop}) {
-    final state = context.watch<CartCubit>().state;
+  Widget _row(BuildContext context, CartState state, String label, String value, {bool isTotal = false, required bool isDesktop}) {
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -147,9 +146,8 @@ class CartScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildEmptyState(BuildContext context) {
+  Widget _buildEmptyState(BuildContext context, CartState state) {
     final l10n = AppLocalizations.of(context);
-    final state = context.watch<CartCubit>().state;
 
     return Center(
       child: Column(
@@ -170,12 +168,12 @@ class CartScreen extends StatelessWidget {
 class _CartItemTile extends StatelessWidget {
   final CartItem item;
   final bool isDesktop;
+  final CartState state;
 
-  const _CartItemTile({required this.item, required this.isDesktop});
+  const _CartItemTile({required this.item, required this.isDesktop, required this.state});
 
   @override
   Widget build(BuildContext context) {
-    final state = context.watch<CartCubit>().state;
     final imageSize = isDesktop ? 100.0 : 70.0;
     final padding = isDesktop ? 16.0 : 12.0;
 
@@ -224,7 +222,7 @@ class _CartItemTile extends StatelessWidget {
               ],
             ),
           ),
-          _QuantityControls(item: item, isDesktop: isDesktop),
+          _QuantityControls(item: item, isDesktop: isDesktop, state: state),
         ],
       ),
     );
@@ -234,12 +232,12 @@ class _CartItemTile extends StatelessWidget {
 class _QuantityControls extends StatelessWidget {
   final CartItem item;
   final bool isDesktop;
+  final CartState state;
 
-  const _QuantityControls({required this.item, required this.isDesktop});
+  const _QuantityControls({required this.item, required this.isDesktop, required this.state});
 
   @override
   Widget build(BuildContext context) {
-    final state = context.watch<CartCubit>().state;
     final iconSize = isDesktop ? 28.0 : 24.0;
 
     return Row(

@@ -1,16 +1,22 @@
 part of 'checkout_cubit.dart';
 
-abstract class CheckoutState {}
-
-class CheckoutInitial extends CheckoutState {
+abstract class CheckoutState {
   final Color surfaceColor;
   final Color textColor;
   final Color primaryColor;
 
-  CheckoutInitial({
+  const CheckoutState({
     this.surfaceColor = Colors.white,
     this.textColor = Colors.black,
     this.primaryColor = const Color(0xFF2196F3),
+  });
+}
+
+class CheckoutInitial extends CheckoutState {
+  const CheckoutInitial({
+    super.surfaceColor,
+    super.textColor,
+    super.primaryColor,
   });
 
   CheckoutInitial copyWith({
@@ -27,39 +33,29 @@ class CheckoutInitial extends CheckoutState {
 }
 
 class CheckoutLoading extends CheckoutState {
-  final Color surfaceColor;
-  final Color textColor;
-  final Color primaryColor;
-
-  CheckoutLoading({
-    this.surfaceColor = Colors.white,
-    this.textColor = Colors.black,
-    this.primaryColor = const Color(0xFF2196F3),
+  const CheckoutLoading({
+    super.surfaceColor,
+    super.textColor,
+    super.primaryColor,
   });
 }
 
 class CheckoutSuccess extends CheckoutState {
   final String orderId;
-  final Color surfaceColor;
-  final Color textColor;
-  final Color primaryColor;
 
-  CheckoutSuccess(this.orderId, {
-    this.surfaceColor = Colors.white,
-    this.textColor = Colors.black,
-    this.primaryColor = const Color(0xFF2196F3),
+  const CheckoutSuccess(this.orderId, {
+    super.surfaceColor,
+    super.textColor,
+    super.primaryColor,
   });
 }
 
 class CheckoutError extends CheckoutState {
   final String message;
-  final Color surfaceColor;
-  final Color textColor;
-  final Color primaryColor;
 
-  CheckoutError(this.message, {
-    this.surfaceColor = Colors.white,
-    this.textColor = Colors.black,
-    this.primaryColor = const Color(0xFF2196F3),
+  const CheckoutError(this.message, {
+    super.surfaceColor,
+    super.textColor,
+    super.primaryColor,
   });
 }

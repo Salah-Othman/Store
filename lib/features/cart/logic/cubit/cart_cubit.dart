@@ -25,10 +25,6 @@ class CartCubit extends Cubit<CartState> {
   }
 
   void initTheme(BuildContext context) {
-    final currentSecondary = state.secondaryColor;
-    if (currentSecondary != AppTheme.secondaryColor) {
-      return;
-    }
     final isDesktop = context.isDesktop;
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final theme = Theme.of(context);
