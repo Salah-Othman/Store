@@ -128,6 +128,76 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
+  Future<void> updatePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    final passwordError = FormValidator.validatePassword(newPassword);
+    if (passwordError != null) {
+      emit(AuthError(passwordError));
+      return;
+    }
+
+    emit(AuthLoading());
+
+    try {
+      final user = _auth.currentUser;
+      if (user == null || user.email == null) {
+        emit(AuthError('User not authenticated. Please sign in again.'));
+        return;
+      }
+
+      final credential = EmailAuthProvider.credential(
+        email: user.email!,
+        password: currentPassword,
+      );
+      await user.reauthenticateWithCredential(credential);
+      await user.updatePassword(newPassword.trim());
+
+      emit(AuthPasswordUpdated());
+    } on FirebaseAuthException catch (e) {
+      final failure = ErrorHandler.handleException(e);
+      emit(AuthError(failure.message));
+    } catch (e) {
+      emit(AuthError(ErrorHandler.unexpectedError));
+    }
+  }
+
+  Future<void> deleteAccount({required String password}) async {
+    if (password.trim().isEmpty) {
+      emit(AuthError('Password is required'));
+      return;
+    }
+
+    emit(AuthLoading());
+
+    try {
+      final user = _auth.currentUser;
+      if (user == null || user.email == null) {
+        emit(AuthError('User not authenticated. Please sign in again.'));
+        return;
+      }
+
+      final credential = EmailAuthProvider.credential(
+        email: user.email!,
+        password: password,
+      );
+      await user.reauthenticateWithCredential(credential);
+      await user.delete();
+
+      await Hive.box('cart_box').clear();
+      await Hive.box('settings_box').clear();
+      await Hive.box('orders_box').clear();
+
+      emit(AuthAccountDeleted());
+    } on FirebaseAuthException catch (e) {
+      final failure = ErrorHandler.handleException(e);
+      emit(AuthError(failure.message));
+    } catch (e) {
+      emit(AuthError(ErrorHandler.unexpectedError));
+    }
+  }
+
   Future<void> signOut() async {
     await _auth.signOut();
     emit(AuthInitial());

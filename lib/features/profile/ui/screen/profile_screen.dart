@@ -4,6 +4,8 @@ import 'package:TR/core/utils/responsive_helper.dart';
 import 'package:TR/features/address/ui/screen/saved_address.dart';
 import 'package:TR/features/admin/ui/screen/admin_dashboard_screen.dart';
 import 'package:TR/features/auth/logic/cubit/auth_cubit.dart';
+import 'package:TR/features/auth/ui/screen/change_password_screen.dart';
+import 'package:TR/features/auth/ui/screen/delete_account_screen.dart';
 import 'package:TR/features/orders_history/ui/screen/order_history_screen.dart';
 import 'package:TR/features/settings/ui/screen/setting_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -202,8 +204,31 @@ class ProfileScreen extends StatelessWidget {
               _profileTile(
                 Icons.help_outline,
                 l10n.helpCenter,
-                color: textColor,
                 () {},
+                color: textColor,
+                isDesktop: isDesktop,
+              ),
+              _divider(color: dividerColor),
+              _profileTile(
+                Icons.lock_outline,
+                l10n.changePassword,
+                () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const ChangePasswordScreen(),
+                    ),
+                  );
+                },
+                color: textColor,
+                isDesktop: isDesktop,
+              ),
+              _divider(color: dividerColor),
+              _profileTile(
+                Icons.delete_forever_outlined,
+                l10n.deleteAccount,
+                () => _showDeleteConfirmDialog(context),
+                color: AppTheme.error,
                 isDesktop: isDesktop,
               ),
               _divider(color: dividerColor),
@@ -219,6 +244,38 @@ class ProfileScreen extends StatelessWidget {
             ],
           );
         },
+      ),
+    );
+  }
+
+  void _showDeleteConfirmDialog(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.deleteAccountConfirmTitle),
+        content: Text(l10n.deleteAccountWarning),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(l10n.cancel),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(dialogContext);
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const DeleteAccountScreen(),
+                ),
+              );
+            },
+            child: Text(
+              l10n.deleteAccount,
+              style: TextStyle(color: AppTheme.error),
+            ),
+          ),
+        ],
       ),
     );
   }

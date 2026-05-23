@@ -9,6 +9,10 @@ class AuthLoading extends AuthState {}
 
 class AuthAuthenticated extends AuthState {}
 
+class AuthPasswordUpdated extends AuthState {}
+
+class AuthAccountDeleted extends AuthState {}
+
 class AuthPasswordResetEmailSent extends AuthState {
   AuthPasswordResetEmailSent(this.email);
 

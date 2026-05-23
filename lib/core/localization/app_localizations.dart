@@ -272,6 +272,40 @@ class AppLocalizations {
   String get edit => isArabic ? 'تعديل' : 'Edit';
   String get delete => isArabic ? 'حذف' : 'Delete';
 
+  // Change Password
+  String get changePassword => isArabic ? 'تغيير كلمة المرور' : 'Change Password';
+  String get currentPassword => isArabic ? 'كلمة المرور الحالية' : 'Current Password';
+  String get newPasswordLabel => isArabic ? 'كلمة المرور الجديدة' : 'New Password';
+  String get confirmNewPassword => isArabic ? 'تأكيد كلمة المرور الجديدة' : 'Confirm New Password';
+  String get changePasswordSubtitle => isArabic
+      ? 'أدخل كلمة المرور الحالية ثم كلمة مرور جديدة.'
+      : 'Enter your current password, then a new one.';
+  String get passwordUpdated => isArabic ? 'تم تحديث كلمة المرور بنجاح' : 'Password updated successfully';
+  String get passwordUpdatedSubtitle => isArabic
+      ? 'سيُطلب منك تسجيل الدخول مرة أخرى في المرة القادمة.'
+      : 'You may need to sign in again next time.';
+  String get passwordsDoNotMatch => isArabic
+      ? 'كلمتا المرور غير متطابقتين'
+      : 'Passwords do not match';
+
+  // Delete Account
+  String get deleteAccount => isArabic ? 'حذف الحساب' : 'Delete Account';
+  String get deleteAccountConfirmTitle => isArabic
+      ? 'تأكيد حذف الحساب'
+      : 'Delete Account';
+  String get deleteAccountWarning => isArabic
+      ? 'لا يمكن التراجع عن هذا الإجراء. سيتم حذف حسابك وجميع بياناته المخزنة محليًا بشكل نهائي.'
+      : 'This action cannot be undone. Your account and all locally stored data will be permanently deleted.';
+  String get deleteAccountSubtitle => isArabic
+      ? 'أدخل كلمة المرور الخاصة بك لتأكيد حذف الحساب.'
+      : 'Enter your password to confirm account deletion.';
+  String get deleteAccountSuccess => isArabic
+      ? 'تم حذف الحساب بنجاح'
+      : 'Account deleted successfully';
+  String get permanentActionWarning => isArabic
+      ? 'هذا الإجراء نهائي ولا يمكن التراجع عنه'
+      : 'This is a permanent action and cannot be undone';
+
   // Onboarding
   String get skip => isArabic ? 'تخطي' : 'Skip';
   String get next => isArabic ? 'التالي' : 'Next';
